@@ -31,3 +31,17 @@ A swimmer plot is a patient-level visualization used in oncology clinical trials
 | `swimmer_plot_colab.ipynb` | Google Colab notebook version |
 | `data/sample_data.xlsx` | Synthetic example data |
 | `output/swimmer_plot_example.png` | Example output image |
+
+## Requirements
+
+```
+pandas
+numpy
+matplotlib
+openpyxl
+```
+
+## References
+
+- Matange S. (2014). Swimmer Plot. SAS Graphically Speaking.
+- JNCI (2016). Current and Evolving Methods to Visualize Biological Data in Cancer Research.
