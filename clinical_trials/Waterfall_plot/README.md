@@ -36,7 +36,6 @@ Patients without baseline or post-baseline measurements are classified as **Not 
 | File | Description |
 |---|---|
 | `waterfall_plot.py` | Study-agnostic Python script |
-| `waterfall_plot_colab.ipynb` | Google Colab notebook version |
 | `data/ADSL.csv` | Synthetic ADaM subject-level dataset (N=50) |
 | `data/ADRS.csv` | Synthetic ADaM response dataset |
 | `data/ADTR.csv` | Synthetic ADaM tumor measurement dataset |

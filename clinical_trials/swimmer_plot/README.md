@@ -28,7 +28,6 @@ A swimmer plot is a patient-level visualization used in oncology clinical trials
 | File | Description |
 |---|---|
 | `swimmer_plot.py` | Study-agnostic Python script |
-| `swimmer_plot_colab.ipynb` | Google Colab notebook version |
 | `data/ADSL.csv` | Synthetic ADaM subject-level dataset (N=50) |
 | `data/ADRS.csv` | Synthetic ADaM response dataset |
 | `data/ADTR.csv` | Synthetic ADaM tumor measurement dataset |
