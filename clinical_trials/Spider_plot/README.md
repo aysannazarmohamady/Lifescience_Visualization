@@ -51,4 +51,3 @@ matplotlib
 
 - Seymour L, et al. (2017). iRECIST: guidelines for response criteria for use in trials testing immunotherapeutics. *Lancet Oncology*.
 - JNCI (2016). Current and Evolving Methods to Visualize Biological Data in Cancer Research.
-```
