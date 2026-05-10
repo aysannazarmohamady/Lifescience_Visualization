@@ -30,7 +30,6 @@ A patient is included if they have:
 | File | Description |
 |---|---|
 | `spider_plot.py` | Study-agnostic Python script |
-| `spider_plot_colab.ipynb` | Google Colab notebook version |
 | `data/ADSL.csv` | Synthetic ADaM subject-level dataset (N=50) |
 | `data/ADTR.csv` | Synthetic ADaM tumor measurement dataset |
 | `output/spider_all.png` | All cohorts output |
