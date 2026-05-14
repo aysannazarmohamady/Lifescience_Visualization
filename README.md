@@ -15,8 +15,8 @@ This repository is a growing collection of Python-based visualizations built for
 | Plot | Description |
 |---|---|
 | [Swimmer plot](clinical_trials/swimmer_plot/) | Individual patient treatment timelines, responses, and endpoints |
-| [Waterfall plot](clinical_trials/waterfall_plot/) | Best % change from baseline in target lesion size |
-| [Spider plot](clinical_trials/spider_plot/) | Tumor burden trajectories over time |
+| [Waterfall plot](clinical_trials/Waterfall_plot/) | Best % change from baseline in target lesion size |
+| [Spider plot](clinical_trials/Spider_plot/) | Tumor burden trajectories over time |
 | Kaplan-Meier | Survival and time-to-event analysis |
 | Forest plot | Subgroup treatment effect estimates |
 
