@@ -50,4 +50,4 @@ matplotlib
 
 ## Structure
 
-Each visualization lives in its own folder with a README, a standalone Python script, a Colab notebook, synthetic data, and example outputs — ready to run as-is or adapt to real study data.
+Each visualization lives in its own folder with a README, a standalone Python script, synthetic data, and example outputs — ready to run as-is or adapt to real study data.
