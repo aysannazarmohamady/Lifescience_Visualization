@@ -4,7 +4,7 @@ Data tells the story. This repository makes it visible.
 
 Clinical trials generate complex, multi-dimensional data about patients, tumors, responses, and outcomes. Turning that data into clear, reproducible, publication-ready visualizations is both a scientific and a communication challenge.
 
-This repository is a growing collection of Python-based visualizations built for oncology and life science research — each one grounded in real analytical standards, implemented cleanly, and demonstrated on synthetic ADaM datasets that mirror real study data.
+This repository is a growing collection of Python-based visualizations built for oncology and life science research, each one grounded in real analytical standards, implemented cleanly, and demonstrated on synthetic ADaM datasets that mirror real study data.
 
 ---
 
