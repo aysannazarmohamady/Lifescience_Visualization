@@ -1,6 +1,6 @@
 # Response Heatmap
 
-A response heatmap visualizes Objective Response Rate (ORR) across two categorical dimensions simultaneously — typically dose cohort and tumor type — allowing rapid identification of which patient subgroups respond best to treatment.
+A response heatmap visualizes Objective Response Rate (ORR) across two categorical dimensions simultaneously, typically dose cohort and tumor type, allowing rapid identification of which patient subgroups respond best to treatment.
 
 ## When to use
 
