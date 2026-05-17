@@ -28,7 +28,6 @@ ORR is calculated as (CR + PR) / n × 100 for all patients in each cohort × tum
 | File | Description |
 |---|---|
 | `response_heatmap.py` | Study-agnostic Python script |
-| `response_heatmap_colab.ipynb` | Google Colab notebook version |
 | `data/ADSL.csv` | Synthetic ADaM subject-level dataset (N=50) |
 | `output/response_heatmap.png` | Example output |
 
@@ -44,4 +43,3 @@ matplotlib
 
 - Jänne PA, et al. (2015). AZD9291 in EGFR inhibitor–resistant non–small-cell lung cancer. *NEJM*.
 - Seymour L, et al. (2017). iRECIST. *Lancet Oncology*.
-```
