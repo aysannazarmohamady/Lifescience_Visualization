@@ -1,22 +1,17 @@
-# ==============================================================================
-# generate_adam_synthetic.R
 # Synthetic ADaM Dataset Generator, ONCVIZ-001
 # Vizatinib Phase II/III Basket Trial, 400 patients, 10 ADaM domains
-#
 # Calibration sources:
 #   - OS/PFS/AGE distributions: cBioPortal NSCLC studies (n=2,153)
 #   - Efficacy parameters: KEYNOTE-189 (Gandhi et al., NEJM 2018)
 #   - PK parameters: Erlotinib population PK (Ling et al., J Clin Pharmacol 2006)
 #   - AE incidence: KEYNOTE-189 FDA label
 #   - Lab toxicity grading: NCI-CTCAE v5.0
-#
 # Usage:
 #   source("generate_adam_synthetic.R")
 #   # CSV files are written to the working directory
 #
 # Requirements:
 #   install.packages(c("dplyr", "tidyr", "lubridate", "purrr"))
-# ==============================================================================
 
 library(dplyr)
 library(tidyr)
@@ -25,9 +20,8 @@ library(purrr)
 
 set.seed(42)
 
-# ==============================================================================
+
 # Global Parameters
-# ==============================================================================
 
 N            <- 400
 CUTOFF       <- as.Date("2026-03-05")
@@ -67,9 +61,8 @@ TRANS <- list(
 
 RESP_NAMES   <- c("CR", "PR", "SD", "PD")
 
-# ==============================================================================
+
 # Utility Functions
-# ==============================================================================
 
 clamp <- function(x, lo, hi) pmax(lo, pmin(hi, x))
 
@@ -85,9 +78,7 @@ rweibull_custom <- function(n, shape, scale) {
   scale * (-log(runif(n)))^(1 / shape)
 }
 
-# ==============================================================================
 # ADSL, Subject-Level Analysis Dataset
-# ==============================================================================
 
 message("Generating ADSL...")
 
@@ -203,9 +194,8 @@ message(sprintf("  ADSL: %d patients | TRT=%d CTL=%d",
                 sum(adsl$ARM == "TREATMENT"),
                 sum(adsl$ARM == "CONTROL")))
 
-# ==============================================================================
+
 # ADRS, Tumor Response Dataset (Markov chain, 42-day cycles)
-# ==============================================================================
 
 message("Generating ADRS...")
 
@@ -253,9 +243,8 @@ adrs <- map_dfr(seq_len(nrow(adsl)), function(i) {
 
 message(sprintf("  ADRS: %d records", nrow(adrs)))
 
-# ==============================================================================
+
 # ADTR, Tumor Measurements (response-stratified interpolation)
-# ==============================================================================
 
 message("Generating ADTR...")
 
@@ -335,10 +324,9 @@ adtr <- map_dfr(seq_len(nrow(adsl)), function(i) {
 message(sprintf("  ADTR: %d records | PCHG range: %.1f%% to %.1f%%",
                 nrow(adtr), min(adtr$PCHG), max(adtr$PCHG)))
 
-# ==============================================================================
+                     
 # ADAE, Adverse Events Dataset
 # Incidence rates calibrated to KEYNOTE-189 FDA label
-# ==============================================================================
 
 message("Generating ADAE...")
 
@@ -431,9 +419,8 @@ message(sprintf("  ADAE: %d records | Grade>=3: %.1f%%",
                 nrow(adae),
                 mean(adae$AETOXGR >= 3) * 100))
 
-# ==============================================================================
+
 # ADTTE, Time-to-Event Dataset (OS, PFS, DOR, TTR)
-# ==============================================================================
 
 message("Generating ADTTE...")
 
@@ -495,10 +482,9 @@ message(sprintf("  ADTTE: %d records | params: %s",
                 nrow(adtte),
                 paste(unique(adtte$PARAMCD), collapse=", ")))
 
-# ==============================================================================
+                     
 # ADPK, Pharmacokinetics (Treatment arm only)
 # One-compartment oral model, calibrated to erlotinib PK
-# ==============================================================================
 
 message("Generating ADPK...")
 
@@ -570,10 +556,9 @@ message(sprintf("  ADPK: %d records | Cmax median=%.0f ng/mL",
                 nrow(adpk),
                 median(adpk$AVAL[adpk$PARAMCD == "CMAX"])))
 
-# ==============================================================================
-# ADLB, Laboratory Data (21 parameters, 8 visits)
-# ==============================================================================
 
+# ADLB, Laboratory Data (21 parameters, 8 visits)
+                     
 message("Generating ADLB...")
 
 LAB_TESTS <- tribble(
@@ -695,9 +680,8 @@ adlb <- map_dfr(seq_len(nrow(adsl)), function(i) {
 message(sprintf("  ADLB: %d records | %d parameters",
                 nrow(adlb), n_distinct(adlb$PARAMCD)))
 
-# ==============================================================================
+
 # ADEX, Exposure and Dose Modifications
-# ==============================================================================
 
 message("Generating ADEX...")
 
@@ -749,9 +733,8 @@ adex <- map_dfr(seq_len(nrow(adsl)), function(i) {
 
 message(sprintf("  ADEX: %d records", nrow(adex)))
 
-# ==============================================================================
+
 # ADBM, Biomarker Dataset
-# ==============================================================================
 
 message("Generating ADBM...")
 
@@ -823,10 +806,9 @@ adbm <- map_dfr(seq_len(nrow(adsl)), function(i) {
 message(sprintf("  ADBM: %d records | %d parameters",
                 nrow(adbm), n_distinct(adbm$PARAMCD)))
 
-# ==============================================================================
-# ADPR, Patient-Reported Outcomes (EORTC QLQ-C30)
-# ==============================================================================
 
+# ADPR, Patient-Reported Outcomes (EORTC QLQ-C30)
+                     
 message("Generating ADPR...")
 
 PRO_SCALES <- tribble(
@@ -901,9 +883,8 @@ adpr <- map_dfr(seq_len(nrow(adsl)), function(i) {
 message(sprintf("  ADPR: %d records | %d scales",
                 nrow(adpr), n_distinct(adpr$PARAMCD)))
 
-# ==============================================================================
+
 # Save All Datasets
-# ==============================================================================
 
 message("\nSaving datasets...")
 
