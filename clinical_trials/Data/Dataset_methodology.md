@@ -1,4 +1,4 @@
-# Synthetic ADaM Dataset Generation for a Clinical Trial Visualization Catalog: Methodology and Rationale
+# Synthetic ADaM Dataset Generation for a Clinical Trial Visualization: Methodology and Rationale
 
 ## 1. Background and Motivation
 
