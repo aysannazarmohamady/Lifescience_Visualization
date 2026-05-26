@@ -2,9 +2,9 @@
 
 ## 1. Background and Motivation
 
-The development of a comprehensive visualization catalog for oncology clinical trials requires a dataset that simultaneously covers all major analysis domains, including subject-level demographics, tumor response, adverse events, laboratory data, time-to-event outcomes, pharmacokinetics, dose exposure, biomarkers, and patient-reported outcomes. While real-world clinical trial data exist in the public domain, no single publicly available dataset satisfies all of the following criteria simultaneously:
+The development of a comprehensive visualization for oncology clinical trials requires a dataset that simultaneously covers all major analysis domains, including subject-level demographics, tumor response, adverse events, laboratory data, time-to-event outcomes, pharmacokinetics, dose exposure, biomarkers, and patient-reported outcomes. While real-world clinical trial data exist in the public domain, no single publicly available dataset satisfies all of the following criteria simultaneously:
 
-- Complete coverage of all ADaM domains required for a full visualization catalog
+- Complete coverage of all ADaM domains required for a full visualization
 - Availability without data use agreements, privacy restrictions, or institutional approval
 - Sufficient sample size to produce statistically stable and visually informative plots across subgroups
 - Internal consistency across domains (e.g., a patient with Grade 4 ALT elevation in the adverse event dataset should also exhibit elevated ALT values in the laboratory dataset)
