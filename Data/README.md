@@ -1,4 +1,4 @@
-# ONCVIZ-001 · ADaM v4
+# ONCVIZ-001 · ADaM v1
 ### A Tumor-Stratified Synthetic Clinical Trial Dataset for Oncology Visualization
 
 ```
@@ -36,21 +36,19 @@ benchmarks so that every number can be traced to a source. That is what this dat
 
 ---
 
-## What makes v4 different from v3
+## Design decisions
 
-Version 3 had one structural problem: it used a single parameter set for all five tumor
-histologies. Every tumor type had the same ORR, the same Weibull survival parameters, the same
-mutation frequencies. That made per-histology subgroup analysis meaningless — PDAC and BRCA were
-statistically indistinguishable because they were drawn from identical distributions.
+A core design decision was tumor stratification: each of the five histologies has its own
+calibrated ORR, survival parameters, mutation prevalence table, toxicity modifier, and
+mutational signature profile. A KRAS mutation in PDAC (91%) means something completely
+different from one in BRCA (2%). Most synthetic datasets use a single parameter set across
+all histologies, which makes per-tumor subgroup analysis meaningless. This one does not.
 
-Version 4 fixes this from the ground up. Each tumor type now has its own calibrated ORR, survival
-parameters, mutation prevalence table, toxicity modifier, and mutational signature profile.
-A KRAS mutation in PDAC (91%) means something completely different from one in BRCA (2%).
-The data now reflects that.
+Other deliberate choices:
 
 ```
-v3  one set of parameters for all histologies
-v4  five independent calibrated profiles, one per tumor type
+Naive approach   one parameter set for all histologies — subgroup analysis meaningless
+This dataset     five independent calibrated profiles, one per tumor type
     + ADRAND (screening/CONSORT)
     + ADSIG  (mutational signatures)
     + competing event encoding
@@ -62,7 +60,7 @@ v4  five independent calibrated profiles, one per tumor type
 
 ## Dataset Inventory
 
-| Domain   | Description                                |   Rows | Cols | Added in v4 |
+| Domain   | Description                                |   Rows | Cols | Design notes |
 |----------|--------------------------------------------|-------:|-----:|-------------|
 | ADSL     | Subject-level analysis dataset             |    400 |   63 | COMPTYPE, 5 mutation flags |
 | ADRS     | Tumor response per RECIST 1.1              |  1,211 |   14 | BICR_CONF, tumor-stratified Markov |
@@ -75,8 +73,8 @@ v4  five independent calibrated profiles, one per tumor type
 | ADBM     | Biomarkers and immune cell panel           | 17,724 |   17 | — |
 | ADPR     | Patient-reported outcomes · EORTC QLQ-C30  | 21,697 |   19 | — |
 | ADMUT    | Somatic mutations · 15 genes               |    753 |   23 | Tumor-stratified prevalence |
-| ADRAND   | Screening and randomization                |    459 |   12 | **New** |
-| ADSIG    | Mutational signatures · SBS                |  2,000 |   13 | **New** |
+| ADRAND   | Screening and randomization                |    459 |   12 | **Included** |
+| ADSIG    | Mutational signatures · SBS                |  2,000 |   13 | **Included** |
 | **Total**|                                            |**131,690**| | |
 
 ---
@@ -217,11 +215,11 @@ Dose re-escalation 15% per-cycle probability when below full dose
 Mean relative dose intensity: **77.1%** — consistent with ~75–85% reported
 for approved oral kinase inhibitors.
 
-### ADRAND — screening (new in v4)
+### ADRAND — screening (included)
 459 screened, 59 screen failures across 6 reason categories, 400 randomized.
 Enables a complete CONSORT flow diagram with reason-level breakdown.
 
-### ADSIG — mutational signatures (new in v4)
+### ADSIG — mutational signatures (included)
 Five SBS signatures per patient, weights normalized to sum to 1.000. Total mutation
 count derived from TMB × estimated exome size. Enables SBS bar charts, hierarchical
 clustering by signature profile, and per-histology comparison plots.
@@ -291,8 +289,8 @@ ASR / incidence trend lines             registry data      →  SEER / GLOBOCAN
 from google.colab import drive
 drive.mount('/content/drive')
 
-exec(open('generate_adam_v4_colab.py').read())
-datasets = generate_adam_v4(output_dir="/content/drive/MyDrive/ONCVIZ/data")
+exec(open('generate_adam_oncviz.py').read())
+datasets = generate_adam_oncviz(output_dir="/content/drive/MyDrive/ONCVIZ/data")
 ```
 
 **Load and subset**
