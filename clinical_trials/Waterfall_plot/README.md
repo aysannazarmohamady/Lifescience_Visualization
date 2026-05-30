@@ -140,7 +140,7 @@ df_trt <- df_all[df_all$arm == "TREATMENT", ]
 
 | File | Description | Dimensions |
 |------|-------------|------------|
-| `waterfall.R` | Main R script — all three plot variants | |
+| `waterfall_plot.R` | Main R script — all three plot variants | |
 | `ADSL.csv` | Subject-level dataset | 400 rows |
 | `ADRS.csv` | Overall response assessments | 1,211 rows |
 | `ADTR.csv` | Tumor measurements (SLD) | 6,539 rows |
