@@ -235,7 +235,7 @@ Enables a complete CONSORT flow diagram with reason-level breakdown.
 
 ## Data Validation
 
-A dedicated validation script (`validate_oncology_data.py`) checks all 13 ADaM datasets
+A dedicated validation scriptchecks all 13 ADaM datasets
 against chart-specific requirements before any visualization is produced. Running this
 script against the released files confirms the following:
 
@@ -262,20 +262,6 @@ script against the released files confirms the following:
 | TP53 prevalence in CRC | **62%** | ~60–65% · TCGA |
 | Competing event categories | **3 present** | Required for CIF plots |
 
-### How to run validation
-
-```python
-# Google Colab — run after uploading CSVs to /content/data/
-# Change DATA_DIR at top of script if needed
-
-# Expected output:
-# ✅ PASS=10  ⚠️ WARN=0  ❌ FAIL=0
-```
-
-```bash
-# Local
-python validate_oncology_data.py
-```
 
 The validation script checks each dataset independently, then performs cross-dataset
 consistency checks (BOR reconciliation, patient ID matching, BASESZ alignment between
@@ -328,14 +314,6 @@ datasets <- generate_adam_oncviz001(
   verbose       = TRUE
 )
 # Output: 13 CSV files in Data/V1/  +  Data/V1.zip
-```
-
-**Validate data**
-
-```python
-# Python / Google Colab
-# Set DATA_DIR = "./Data/V1" at top of script
-python validate_oncology_data.py
 ```
 
 **Load and subset**
@@ -399,7 +377,6 @@ Data/
     ├── ADRAND.csv
     └── ADSIG.csv
 
-validate_oncology_data.py        ← data validation script
 ```
 
 ---
