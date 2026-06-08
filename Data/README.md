@@ -3,120 +3,91 @@
 
 ```
 Study     ONCVIZ-001  ·  Vizatinib 300 mg QD vs Placebo
-Design    Phase II/III Open-Label Randomized Basket Trial
-Patients  400  (TRT = 263  ·  CTL = 137  ·  2:1 ratio)
-Records   131,690 across 13 ADaM domains
+Design    Phase I/II Open-Label Dose-Escalation + Randomized Basket Trial
+Patients  80  (Phase I = 20 TRT  ·  Phase II = 40 TRT + 20 CTL  ·  2:1 ratio)
+Records   26,723 across 13 ADaM domains
 Seed      42  ·  fully reproducible
 Cutoff    March 5, 2026
 ```
 
 ---
 
-## Why we built this
+## Study Design
 
-There is a real gap in the oncology data visualization ecosystem. Most published visualization
-catalogs either use toy datasets that are too simple to reveal anything interesting, or they stitch
-together figures from different studies with incompatible assumptions about trial design, patient
-populations, and data structure. Reproducibility suffers. Readers cannot verify whether a spider
-plot or a competing risks curve was generated from the same 400 patients as the forest plot
-sitting next to it.
+This dataset models a two-part oncology basket trial across five solid tumor histologies.
 
-The obvious alternative is real clinical data. The problem is that patient-level data from
-randomized controlled trials is almost never publicly available at the resolution needed for this
-kind of work. Regulatory submissions contain everything, but are not released at the individual
-level. The pharmaverse `admiral` test datasets are designed for software testing, not visual
-demonstration, and lack PK profiles, dose modification histories, mutation records, and immune
-biomarkers. cBioPortal and TCGA provide rich genomic data but no longitudinal tumor measurements,
-no QoL, no pharmacokinetics, and no cross-domain consistency.
+**Phase I — Dose Escalation (n=20, Treatment only)**
+Four dose levels (100 → 200 → 300 → 400 mg QD), five patients per cohort.
+Enables: DLT plots, Dose Escalation (3+3 / BOIN), Exposure-Response, Trough Level.
 
-Synthetic data is the right answer here, provided it is done carefully. The goal is not to trick
-anyone into thinking this is real. The goal is a dataset that behaves statistically like real
-oncology data, respects the biological relationships between domains, and is anchored to published
-benchmarks so that every number can be traced to a source. That is what this dataset is.
+**Phase II — Randomized Expansion (n=60)**
+RP2D = 300 mg QD vs Placebo, 2:1 allocation (40 TRT : 20 CTL).
+Enables: all response assessment, survival, subgroup, biomarker, and QoL charts.
 
 ---
 
-## Design decisions
+## Why this dataset
 
-A core design decision was tumor stratification: each of the five histologies has its own
-calibrated ORR, survival parameters, mutation prevalence table, toxicity modifier, and
-mutational signature profile. A KRAS mutation in PDAC (91%) means something completely
-different from one in BRCA (2%). Most synthetic datasets use a single parameter set across
-all histologies, which makes per-tumor subgroup analysis meaningless. This one does not.
+There is a real gap in the oncology data visualization ecosystem. Most published visualization
+catalogs use toy datasets too simple to reveal anything interesting, or stitch together figures
+from different studies with incompatible assumptions. Reproducibility suffers, and readers cannot
+verify whether a spider plot was generated from the same patients as the forest plot next to it.
 
-Other deliberate choices:
+Real patient-level RCT data is almost never publicly available. The pharmaverse `admiral` test
+datasets are designed for software testing, not visual demonstration, and lack PK profiles, dose
+modification histories, mutation records, and immune biomarkers. cBioPortal and TCGA provide rich
+genomic data but no longitudinal tumor measurements, no QoL, no pharmacokinetics, and no
+cross-domain consistency.
 
-```
-Naive approach   one parameter set for all histologies, subgroup analysis meaningless
-This dataset     five independent calibrated profiles, one per tumor type
-    + ADRAND (screening/CONSORT)
-    + ADSIG  (mutational signatures)
-    + competing event encoding
-    + CTCAE grading for all lab parameters
-    + dose re-escalation logic
-```
+Synthetic data is the right answer — provided it is done carefully. The goal is a dataset that
+behaves statistically like real oncology data, respects biological relationships between domains,
+and is anchored to published benchmarks so that every number can be traced to a source.
+
+A core design decision was **tumor stratification**: each of the five histologies has its own
+calibrated ORR, survival parameters, mutation prevalence table, toxicity modifier, and mutational
+signature profile. A KRAS mutation in PDAC (93%) means something completely different from one
+in BRCA (2%). Most synthetic datasets use a single parameter set across all histologies, which
+makes per-tumor subgroup analysis meaningless. This one does not.
 
 ---
 
 ## Dataset Inventory
 
-| Domain   | Description                                |   Rows | Cols | Design notes |
-|----------|--------------------------------------------|-------:|-----:|-------------|
-| ADSL     | Subject-level analysis dataset             |    400 |   63 | COMPTYPE, 5 mutation flags |
-| ADRS     | Tumor response per RECIST 1.1              |  1,211 |   14 | BICR_CONF, tumor-stratified Markov |
-| ADTR     | Sum of longest diameters (mm)              |  6,539 |   15 | TUMORTYPE propagated |
-| ADAE     | Adverse events · MedDRA / CTCAE v5         |  5,213 |   18 | Histology-specific incidence |
-| ADLB     | Laboratory parameters · 21 tests           | 53,298 |   21 | Full CTCAE grading |
-| ADTTE    | Time-to-event · OS / PFS / DOR / TTR       |    970 |   34 | LM flags, COMPEVENT |
-| ADPK     | Pharmacokinetics · 1-compartment model     |  8,942 |   17 | — |
-| ADEX     | Dose exposure and modifications            | 12,484 |   20 | Re-escalation, CUMDOSE |
-| ADBM     | Biomarkers and immune cell panel           | 17,724 |   17 | — |
-| ADPR     | Patient-reported outcomes · EORTC QLQ-C30  | 21,697 |   19 | — |
-| ADMUT    | Somatic mutations · 15 genes               |    753 |   23 | Tumor-stratified prevalence |
-| ADRAND   | Screening and randomization                |    459 |   12 | **Included** |
-| ADSIG    | Mutational signatures · SBS                |  2,000 |   13 | **Included** |
-| **Total**|                                            |**131,690**| | |
+| Domain   | Description                                   |   Rows | Cols | Notes |
+|----------|-----------------------------------------------|-------:|-----:|-------|
+| ADSL     | Subject-level analysis dataset                |     80 |   65 | PHASE, DOSELEVEL, COMPTYPE |
+| ADRS     | Tumor response per RECIST 1.1                 |    769 |   14 | Longitudinal — one row per visit |
+| ADTR     | Sum of longest diameters (mm)                 |    769 |   15 | Aligned with ADRS visit structure |
+| ADAE     | Adverse events · MedDRA / CTCAE v5            |    752 |   19 | DOSELEVEL embedded |
+| ADLB     | Laboratory + immune cell parameters · 20 tests| 11,880 |   21 | CD4/CD8/NK/TREG included |
+| ADTTE    | Time-to-event · 7 endpoints                   |    377 |   33 | OS/PFS/EFS/TTP/DOR/TTR/DFS |
+| ADPK     | Pharmacokinetics · 1-compartment model        |  1,984 |   17 | Treatment arm only · 10 timepoints |
+| ADEX     | Dose exposure and modifications               |  2,361 |   20 | DOSEINT on 0–1 scale (RDI) |
+| ADBM     | Biomarkers · ctDNA · immune panel             |  3,321 |   17 | Serial ctDNA with BOR-linked decay |
+| ADPR     | Patient-reported outcomes · EORTC QLQ-C30     |  3,888 |   19 | 8 scales · MID=10 |
+| ADMUT    | Somatic mutations · 15 genes                  |    187 |   23 | CNV records included |
+| ADRAND   | Screening and randomization                   |     92 |   12 | 92 screened → 80 enrolled |
+| ADSIG    | Mutational signatures · SBS                   |    263 |   13 | 12 unique SBS signatures |
+| **Total**|                                               |**26,723**| | |
 
 ---
 
 ## Calibration Strategy
 
-Two calibration sources were used, chosen to maximize traceability.
-
-### Empirical calibration from cBioPortal
-
-Distributional parameters for demographic and survival variables were estimated from patient-level
-data accessed via the cBioPortal REST API across four NSCLC studies:
-`lung_msk_2017`, `nsclc_pd1_msk_2018`, `luad_tcga_pan_can_atlas_2018`, `lusc_tcga_pan_can_atlas_2018`
-— yielding a pooled analytical cohort of 2,153 patients. Candidate parametric distributions were
-fitted by maximum likelihood estimation, with model selection by AIC.
-
-| Variable | Distribution | Parameters | n | KS p-value |
-|----------|-------------|-----------|---|------------|
-| OS (months) | Weibull | shape=0.92, scale=24.8 | 970 | 0.007 |
-| PFS (months) | Weibull | shape=0.78, scale=15.2 | 1,230 | 0.185 |
-| Age (years) | Normal | μ=66.0, σ=11.0 | 2,069 | <0.001 |
-| Sex | Categorical | M=50.9%, F=49.1% | 2,099 | — |
-| Smoking | Categorical | Former-heavy 48.8%, Never 32.2% | 860 | — |
-
-The KS p-values for OS and age are statistically significant. This is expected at n>900: the test
-has enough power to detect departures from parametric form that are biologically irrelevant.
-Visual inspection of fitted density curves confirmed acceptable fit in both cases.
-
 ### Literature-based calibration
 
 Each tumor type was anchored to a specific published trial or database:
 
-| Histology | Primary source | Parameters borrowed |
-|-----------|---------------|---------------------|
-| NSCLC | KEYNOTE-189 (Gandhi et al., NEJM 2018) | ORR, OS/PFS, AE incidence |
-| HCC | IMbrave150 (Finn et al., NEJM 2020) | ORR, OS HR, PFS HR |
-| CRC | KEYNOTE-177 (André et al., NEJM 2020) | ORR, survival |
-| BRCA | OlympiAD (Robson et al., NEJM 2017) | ORR, survival |
+| Histology / Domain | Primary source | Parameters borrowed |
+|--------------------|---------------|---------------------|
+| NSCLC | KEYNOTE-189 (Gandhi et al., *NEJM* 2018) | ORR, OS/PFS HR, AE incidence |
+| HCC | IMbrave150 (Finn et al., *NEJM* 2020) | ORR, OS HR, PFS HR |
+| CRC | KEYNOTE-177 (André et al., *NEJM* 2020) | ORR, survival |
+| BRCA | OlympiAD (Robson et al., *NEJM* 2017) | ORR, survival |
 | PDAC | NAPOLI-1 / PRODIGE-4 | ORR, survival |
 | All histologies | TCGA PanCancer Atlas (cBioPortal) | Mutation prevalences |
 | All histologies | COSMIC v3.3 SBS catalogue | Signature profiles |
-| PK | Erlotinib popPK (Ling et al., 2006) | CL/F, Vd/F, Ka |
+| PK | 1-compartment oral model (Ling et al., 2006) | CL/F=15, Vd/F=100, Ka=1.5 |
 | Safety grading | NCI CTCAE v5.0 | All lab threshold values |
 | QoL | EORTC QLQ-C30 manual (3rd ed.) | Baseline norms, MID=10 |
 
@@ -124,159 +95,205 @@ Each tumor type was anchored to a specific published trial or database:
 
 ## Tumor-Stratified Parameters
 
-### Response and survival
+### Response and survival (Treatment arm)
 
-| Histology | n | ORR TRT | ORR CTL | OS median TRT | OS HR | PFS HR |
-|-----------|---|--------:|--------:|--------------:|------:|-------:|
-| NSCLC | 88 | 47% | 20% | 19.6 m | 0.49 | 0.52 |
-| HCC | 69 | 27% | 12% | 12.4 m | 0.58 | 0.59 |
-| CRC | 80 | 13% | 0% | 7.3 m | 0.72 | 0.75 |
-| BRCA | 82 | 38% | 12% | 19.8 m | 0.61 | 0.63 |
-| PDAC | 81 | 11% | 0% | 3.6 m | 0.76 | 0.78 |
+| Histology | n TRT | n CTL | ORR TRT | ORR CTL | OS median TRT |
+|-----------|------:|------:|--------:|--------:|--------------:|
+| NSCLC     |    23 |     2 |     52% |      0% |        18.3 m |
+| BRCA      |     8 |     5 |     38% |     20% |        16.7 m |
+| HCC       |    10 |     2 |     10% |      — |         4.0 m |
+| CRC       |     9 |     7 |     44% |     14% |        13.5 m |
+| PDAC      |    12 |     2 |     17% |      0% |         3.5 m |
+| **All**   |**62** |**18** | **33%** |         |               |
+
+BOR distribution (all 80 patients): CR=16 (20%) · PR=10 (12%) · SD=16 (20%) · PD=38 (48%)
+Responders (CR+PR): **26 patients**
 
 ### Somatic mutation prevalence · TCGA PanCancer Atlas
 
-| Gene | NSCLC | CRC | HCC | PDAC | BRCA | Key biology |
-|------|------:|----:|----:|-----:|-----:|-------------|
-| TP53 | 49% | 68% | 32% | 72% | 38% | Universal tumor suppressor |
-| KRAS | 31% | 42% | 1% | **91%** | 2% | Dominant driver in PDAC |
-| EGFR | 10% | 1% | 0% | 1% | 4% | Targetable in NSCLC |
-| PIK3CA | 7% | 20% | 5% | 3% | **35%** | PI3K pathway, high in BRCA |
-| SMAD4 | 2% | **32%** | 3% | **22%** | 2% | TGF-β, CRC and PDAC |
-| CDKN2A | 12% | 5% | 8% | **30%** | 15% | Cell cycle regulation |
-| STK11 | 17% | 3% | 2% | 4% | 5% | LKB1 pathway, NSCLC |
+| Gene    | NSCLC | CRC | HCC | PDAC | BRCA | Key biology |
+|---------|------:|----:|----:|-----:|-----:|-------------|
+| TP53    |   46% | 62% | 28% |  72% |  38% | Universal tumour suppressor |
+| KRAS    |   30% | 45% |  3% | **93%** | 3% | Dominant driver in PDAC |
+| EGFR    |   15% |  2% |  1% |   2% |   2% | Targetable in NSCLC |
+| PIK3CA  |    7% | 20% |  5% |   3% |  35% | PI3K pathway, high in BRCA |
+| SMAD4   |    2% | 32% |  3% |  22% |   2% | TGF-β · CRC and PDAC |
+| CDKN2A  |   12% |  5% |  8% |  30% |  15% | Cell cycle regulation |
+| STK11   |   17% |  3% |  2% |   4% |   5% | LKB1 pathway · NSCLC |
 
 ### Toxicity modifiers by histology
 
 KEYNOTE-189 base incidence rates multiplied by the factors below:
 
-| SOC category | NSCLC | HCC | CRC | BRCA | PDAC |
-|--------------|------:|----:|----:|-----:|-----:|
-| Hepatic | 1.0× | **2.2×** | 0.8× | 0.9× | 1.2× |
-| Gastrointestinal | 1.0× | 1.1× | **1.8×** | 1.2× | **2.0×** |
-| Dermatologic | 1.0× | 0.9× | 1.2× | 1.3× | 0.7× |
-| Hematologic | 1.0× | 0.9× | 1.1× | **1.4×** | 1.3× |
+| SOC category     | NSCLC | HCC    | CRC    | BRCA   | PDAC   |
+|------------------|------:|-------:|-------:|-------:|-------:|
+| Hepatic          |  1.0× | **2.2×** | 0.8× | 0.9×  | 1.2×   |
+| Gastrointestinal |  1.0× | 1.1×   | **1.8×** | 1.2× | **2.0×** |
+| Dermatologic     |  1.0× | 0.9×   | 1.2×   | 1.3×   | 0.7×   |
+| Hematologic      |  1.0× | 0.9×   | 1.1×   | **1.4×** | 1.3× |
 
 ### Mutational signatures · COSMIC v3.3 SBS
 
-| Histology | Dominant signature | Weight | Biology |
-|-----------|-------------------|-------:|---------|
-| NSCLC | SBS4 | 35% | Tobacco carcinogens |
-| NSCLC | SBS2 + SBS13 | 35% | APOBEC cytidine deaminase |
-| CRC | SBS15 + SBS6 + SBS44 | 45% | Defective mismatch repair |
-| HCC | SBS22 + SBS24 | 40% | Aristolochic acid / aflatoxin |
-| PDAC | SBS1 + SBS5 | 65% | Age-related clock-like mutagenesis |
-| BRCA | SBS3 | 30% | HR deficiency / BRCA1–2 loss |
-| BRCA | SBS2 + SBS13 | 45% | APOBEC activity |
+| Histology | Dominant signatures | Weight | Biology |
+|-----------|--------------------:|-------:|---------|
+| NSCLC     | SBS4                |    35% | Tobacco carcinogens |
+| NSCLC     | SBS2 + SBS13        |    35% | APOBEC cytidine deaminase |
+| CRC       | SBS15 + SBS6 + SBS44|    45% | Defective mismatch repair |
+| HCC       | SBS22 + SBS24       |    40% | Aristolochic acid / aflatoxin |
+| PDAC      | SBS1 + SBS5         |    65% | Age-related clock-like mutagenesis |
+| BRCA      | SBS3                |    30% | HR deficiency / BRCA1–2 loss |
+| BRCA      | SBS2 + SBS13        |    45% | APOBEC activity |
+
+12 unique SBS signatures · weights sum to 1.000 per patient (validated)
 
 ---
 
 ## Domain Design Notes
 
-### ADTTE — time-to-event
-Four endpoints: OS, PFS, DOR (responders only), TTR (responders only). Each record embeds
-15 subgroup variables from ADSL so forest plots can be built without additional joins.
-Three landmark flags are pre-computed: `LM6MFL`, `LM12MFL`, `LM24MFL`.
+### ADRS — Longitudinal response
 
-Competing events are encoded in `COMPTYPE` for cumulative incidence function (CIF) plots:
+One row per patient per assessment cycle (every 42 days), generated by a tumour-stratified
+Markov chain. Median 13 visits per patient. This enables Spider Plots (≥3 on-study assessments
+required), BOR derivation from ADRS, and response trajectory analyses.
 
-```
-PROGRESSION                386 patients   dominant event
-DEATH_WITHOUT_PROGRESSION    9 patients   non-cancer death, ~4% of TRT deaths
-CENSORED                     5 patients   administrative
-```
+BOR in ADSL (`BESTRSPC`) is derived from ADRS post-generation using the best observed response
+across all visits, ensuring full cross-domain consistency. ADRS and ADSL BOR agree for all
+80 patients (0 mismatches).
 
-### ADLB — laboratory parameters
-CTCAE v5.0 grading computed for all applicable parameters:
+### ADTTE — Seven time-to-event endpoints
 
 ```
-Hepatic      ALT, AST (5-grade thresholds)   BILI (4-grade)
-Hematologic  ANC, PLT, HGB
-Renal        CREATININE
-Cardiac      QTcF
+OS    Overall Survival              80 patients   events=44   censored=36
+PFS   Progression-Free Survival     80 patients   events=77   censored=3
+EFS   Event-Free Survival           80 patients   (≈ PFS for solid tumours)
+TTP   Time to Progression           80 patients   (censors non-progression deaths)
+DOR   Duration of Response          26 patients   responders only
+TTR   Time to Response              26 patients   responders only
+DFS   Disease-Free Survival          5 patients   CR patients only
 ```
 
-Sodium is stored as `PARAMCD = "SOD"` rather than `"NA"` to prevent accidental
-missing-value coercion in downstream tooling. All other parameter codes are unambiguous.
+Each record embeds 15 subgroup variables from ADSL — forest plots require no joins.
+Three landmark flags pre-computed: `LM6MFL`, `LM12MFL`, `LM24MFL`.
 
-Hy's Law candidates (peak ALT >3× ULN concurrent with peak BILI >2× ULN): **22 patients**,
-within the FDA-expected range of 5–25 for this population.
-
-### ADEX — dose exposure
+Competing events in `COMPTYPE`:
 ```
-Dose reduction     10% per-cycle probability after cycle 2
-                   one level at a time: 300 → 200 → 100 mg
-
-Dose interruption   4% per-cycle probability
-                   one-cycle hold then automatic resumption
-
-Dose re-escalation 15% per-cycle probability when below full dose
+PROGRESSION                  76 patients
+CENSORED                      3 patients
+DEATH_WITHOUT_PROGRESSION     1 patient   non-cancer death
 ```
-Mean relative dose intensity: **77.1%** — consistent with ~75–85% reported
-for approved oral kinase inhibitors.
 
-### ADRAND — screening (included)
-459 screened, 59 screen failures across 6 reason categories, 400 randomized.
+### ADEX — Dose intensity
+
+`DOSEINT` is stored as a proportion (0.0–1.0) — the correct scale for Relative Dose Intensity
+(RDI) plots. Mean RDI across treatment cycles: **96.5%**, consistent with an early-phase
+study with limited long-term dose modifications.
+
+Dose modification logic per cycle (after cycle 2, treatment arm only):
+```
+Dose reduction     8% probability  →  level drops one step (300→200→100 mg)
+Dose interruption  3% probability  →  one-cycle hold then automatic resumption
+```
+
+### ADLB — Immune cell markers
+
+Four immune cell parameters alongside standard chemistry and haematology:
+`CD4`, `CD8`, `NK`, `TREG` — enabling Immune Cell Infiltration Heatmaps and longitudinal
+immune panel plots without a separate immunophenotyping dataset.
+
+### ADBM — Serial ctDNA
+
+`PARAMCD = "CTDNA"` measured at seven timepoints per patient with response-linked kinetics:
+exponential decay for CR/PR, linear increase for PD. Enables ctDNA Dynamics plots and
+response correlation analyses.
+
+### ADPK — Pharmacokinetics
+
+Treatment arm only (62 patients). Two PK cycles (Cycle 1 Day 1, Cycle 3 Day 1).
+10 nominal timepoints: 0, 0.5, 1, 2, 3, 4, 6, 8, 12, 24 hours.
+Summary parameters: `CMAX`, `AUC`, `AUCINF`, `TMAX`, `THALF`, `TROUGH`.
+
+```
+Cmax   median=1.9 ng/mL   range=0.5–3.4 ng/mL
+AUCinf median=13.5 ng·h/mL
+```
+
+*Note: PK values are generated from a simplified 1-compartment oral model for structural
+validity (shape, variability, dose proportionality). Absolute concentrations are not
+calibrated to a specific drug and should not be interpreted as clinically meaningful.*
+
+### ADRAND — Screening
+
+```
+Screened     92
+Randomized   80
+Screen-fail  12  (6 reason categories)
+```
+
 Enables a complete CONSORT flow diagram with reason-level breakdown.
-
-### ADSIG — mutational signatures (included)
-Five SBS signatures per patient, weights normalized to sum to 1.000. Total mutation
-count derived from TMB × estimated exome size. Enables SBS bar charts, hierarchical
-clustering by signature profile, and per-histology comparison plots.
 
 ---
 
-## Validation
+## Data Validation
 
-Every check was run programmatically against the final output files.
+A dedicated validation scriptchecks all 13 ADaM datasets
+against chart-specific requirements before any visualization is produced. Running this
+script against the released files confirms the following:
+
+### Programmatic validation results
 
 | Check | Result | Benchmark / Requirement |
-|-------|--------|------------------------|
+|-------|--------|-------------------------|
 | OS ≥ PFS, all patients | **0 violations** | Required |
-| ADSL ↔ ADRAND exact ID match | **400 / 400** | Required |
-| ADAE patient coverage | **400 / 400 (100%)** | Required |
-| ADLB null PARAMCD | **0** | Required |
-| ADLB ATOXGR null | **0** | Required |
+| ADSL ↔ ADRAND exact ID match | **80 / 80** | Required |
+| ADSL BOR consistent with ADRS | **0 mismatches** | Required |
+| ADRS median visits per patient | **13** | ≥3 required for Spider Plot |
+| ADTTE parameters present | **OS/PFS/EFS/TTP/DOR/TTR/DFS** | Required |
+| DOSEINT range | **0.000 – 1.000** | Required for RDI plot |
+| AVAL (survival) all non-negative | **0 violations** | Required |
 | ADMUT gene count | **15 genes** | Required |
-| ADSIG weight sum per patient | **1.000 (all)** | Required |
-| Cross-domain extra IDs | **0 in any domain** | Required |
+| ADMUT patients with sequencing | **72 / 80 (90%)** | Required |
+| ADSIG weight sum per patient | **1.000 (all 80)** | Required |
+| ADSIG unique signatures | **12** | ≥3 required for signature plot |
+| Immune markers in ADLB | **CD4/CD8/NK/TREG** | Required |
+| ctDNA timepoints per patient | **7** | ≥4 required for dynamics plot |
+| Cross-domain orphan IDs | **0 in any domain** | Required |
 | Grade ≥ 3 AE rate (treatment) | **19.5%** | 15–20% · KEYNOTE-189 |
-| Cmax median | **735 ng/mL** | 500–1,500 ng/mL · erlotinib popPK |
-| AUCinf median | **~17,000 ng·h/mL** | erlotinib popPK |
-| KRAS prevalence in PDAC | **91%** | ~90% · TCGA |
-| TP53 prevalence in CRC | **68%** | ~60–65% · TCGA |
-| Mean RDI | **77.1%** | ~75–85% · kinase inhibitors |
-| Hy's Law candidates | **22** | 5–25 · FDA guidance |
+| KRAS prevalence in PDAC | **93%** | ~90% · TCGA |
+| TP53 prevalence in CRC | **62%** | ~60–65% · TCGA |
 | Competing event categories | **3 present** | Required for CIF plots |
+
+
+The validation script checks each dataset independently, then performs cross-dataset
+consistency checks (BOR reconciliation, patient ID matching, BASESZ alignment between
+ADSL and ADTR), and finally maps all 70+ chart types to their required columns to flag
+any gaps before chart generation begins.
 
 ---
 
 ## Visualization Coverage
 
-### Supported
+### Fully supported
 
-| Category | Plot types | Primary domain |
-|----------|-----------|----------------|
-| Response Assessment | Waterfall, Spider, Swimmer, BOR, SLD over time | ADTR · ADRS |
-| Survival | KM (OS/PFS/DOR), Landmark, CIF / Competing Risks, RMST, TTR, TTP | ADTTE |
-| Genomics | OncoPrint, VAF, TMB, MSI, ctDNA dynamics, Mutational Signature | ADMUT · ADSIG · ADBM |
-| Safety | AE bar chart, Toxicity heatmap, Hy's Law, Lab shift | ADAE · ADLB |
-| PK/PD | Concentration-time, Trough, Exposure-efficacy, Waterfall+PK overlay | ADPK · ADEX |
-| Biomarker | Forest plot (15 subgroups), Immune cell panel, PD-L1 by response | ADTTE · ADBM |
-| QoL / PRO | PRO trajectories, MID responder rate, Deterioration-free | ADPR |
-| Trial Design | CONSORT, Enrollment curve, Dose intensity, RDI | ADRAND · ADEX |
+| Category | Chart types | Primary domain |
+|----------|-------------|----------------|
+| Response Assessment | Waterfall · Spider · Swimmer · BOR · SLD over time · Tumor Burden | ADTR · ADRS |
+| Survival | KM (OS/PFS/EFS/TTP/DOR/TTR/DFS) · Landmark · CIF · RMST | ADTTE |
+| Genomics | OncoPrint · VAF · TMB · MSI · ctDNA dynamics · Mutational Signature | ADMUT · ADSIG · ADBM |
+| Safety | AE bar · Toxicity heatmap · DLT · Dose Escalation · Exposure-Response | ADAE · ADLB |
+| PK/PD | Concentration-time · Trough · Exposure-efficacy · Waterfall+PK overlay | ADPK · ADEX |
+| Biomarker | Forest plot (15 subgroups) · Immune cell panel · PD-L1 by response | ADTTE · ADBM · ADLB |
+| QoL / PRO | PRO trajectories · MID responder rate · Deterioration-free | ADPR |
+| Trial Design | CONSORT · Enrollment curve · Dose intensity · RDI | ADRAND · ADEX |
 
-### Not supported
-
-The following require data modalities structurally incompatible with a single-arm clinical trial
-ADaM dataset. They are documented separately with references to appropriate public sources.
+### Not supported (structural incompatibility)
 
 ```
-CNV / Circos / Manhattan / Rainfall    whole-genome data  →  TCGA
-Flow cytometry / UMAP / t-SNE / CyTOF  single-cell data   →  GEO
-CAR-T expansion / CRS timeline          CAR-T trial data   →  specialized sources
-Radiomics overlays                      imaging data       →  TCIA
-ASR / incidence trend lines             registry data      →  SEER / GLOBOCAN
+CNV / Circos / Manhattan / Rainfall     whole-genome data  →  TCGA
+Flow cytometry / UMAP / t-SNE / CyTOF   single-cell data   →  GEO
+CAR-T expansion / CRS timeline           CAR-T trial data   →  specialized sources
+Radiomics overlays                       imaging data       →  TCIA
+ASR / incidence trend lines              registry data      →  SEER / GLOBOCAN
+Funnel plot / NMA                        multi-study data   →  meta-analysis datasets
 ```
 
 ---
@@ -286,8 +303,17 @@ ASR / incidence trend lines             registry data      →  SEER / GLOBOCAN
 **Generate data**
 
 ```r
-source("generate_adam_oncviz.R")
-datasets <- generate_adam_oncviz(output_dir = "./Data/V1")
+source("Data/generate_adam_oncviz001.R")
+
+datasets <- generate_adam_oncviz001(
+  output_dir    = "./Data/V1",
+  seed          = 42L,
+  n_phase1      = 20L,
+  n_phase2_trt  = 40L,
+  n_phase2_ctl  = 20L,
+  verbose       = TRUE
+)
+# Output: 13 CSV files in Data/V1/  +  Data/V1.zip
 ```
 
 **Load and subset**
@@ -297,27 +323,68 @@ library(dplyr)
 
 adsl  <- read.csv("Data/V1/ADSL.csv")
 adtte <- read.csv("Data/V1/ADTTE.csv")
+adrs  <- read.csv("Data/V1/ADRS.csv")
+adtr  <- read.csv("Data/V1/ADTR.csv")
 
-# Subset: NSCLC treatment arm
-nsclc_trt <- adsl |> filter(TUMORTYPE == "NSCLC", ARM == "TREATMENT")
+# Phase II Treatment arm · NSCLC only
+nsclc_trt <- adsl |>
+  filter(TUMORTYPE == "NSCLC", ARM == "TREATMENT", PHASE == "II")
 
-# OS data — 15 subgroup variables already embedded, no join required
+# OS with 15 subgroup variables embedded — no join required
 os <- adtte |> filter(PARAMCD == "OS")
-# Available subgroups: TUMORTYPE, AGEGR1, SEX, ECOG, PDL1GRP, MSISTS,
-# TMBHIGH, LIVERMETS, PRIORLINES, SMOKING, EGFRMUT, KRASMUT,
-# TP53MUT, STK11MUT, STAGE
+# Subgroups: TUMORTYPE, AGEGR1, SEX, ECOG, PDL1GRP, MSISTS, TMBHIGH,
+#            LIVERMETS, PRIORLINES, EGFRMUT, KRASMUT, TP53MUT, STK11MUT, STAGE
 
-# Safe read for ADLB — Sodium PARAMCD is "SOD", not "NA"
-adlb   <- read.csv("data/V1/ADLB.csv")
-sodium <- adlb |> filter(PARAMCD == "SOD")
+# Waterfall: best % change per patient from ADTR
+best_pchg <- adtr |>
+  filter(AVISITN > 0) |>
+  group_by(USUBJID) |>
+  slice_min(PCHG, n = 1) |>
+  ungroup()
+
+# RDI: DOSEINT already on 0–1 scale
+adex <- read.csv("Data/V1/ADEX.csv")
+rdi <- adex |>
+  filter(ARM == "TREATMENT") |>
+  group_by(USUBJID) |>
+  summarise(mean_rdi = mean(DOSEINT), .groups = "drop")
+
+# ctDNA dynamics
+adbm <- read.csv("Data/V1/ADBM.csv")
+ctdna <- adbm |> filter(PARAMCD == "CTDNA") |>
+  left_join(adsl |> select(USUBJID, BESTRSPC), by = "USUBJID")
+```
+
+---
+
+## Repository Structure
+
+```
+Data/
+├── generate_adam_oncviz001.R    ← data generation script
+└── V1/
+    ├── ADSL.csv
+    ├── ADRS.csv
+    ├── ADTR.csv
+    ├── ADAE.csv
+    ├── ADLB.csv
+    ├── ADTTE.csv
+    ├── ADPK.csv
+    ├── ADEX.csv
+    ├── ADBM.csv
+    ├── ADPR.csv
+    ├── ADMUT.csv
+    ├── ADRAND.csv
+    └── ADSIG.csv
+
 ```
 
 ---
 
 ## Reproducibility
 
-The fixed seed `set.seed(42)` is applied before any sampling.
-The generator produces bitwise-identical output on:
+Fixed seed `set.seed(42)` applied before all sampling.
+Produces bitwise-identical output on:
 
 ```
 R      >= 4.1
