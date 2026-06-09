@@ -1,8 +1,8 @@
 # Swimmer Plot
 
-A patient-level visualization displaying individual treatment duration, longitudinal response assessments, post-treatment follow-up, and outcome status (ongoing, death, discontinuation) per RECIST 1.1 criteria, stratified by histology and best overall response, across a fully synthetic phase II/III basket trial dataset.
+A patient-level visualization displaying individual treatment duration, longitudinal response assessments, post-treatment follow-up, and outcome status (ongoing, death, discontinuation) per RECIST 1.1 criteria, with liver metastasis status, across a fully synthetic phase II/III basket trial dataset.
 
-**Dataset:** ONCVIZ-001 · N = 263 (Treatment Arm) | **Cutoff:** 31 May 2026 | **Language:** R · ggplot2 | **License:** CC BY 4.0
+**Dataset:** ONCVIZ-001 · N = 263 (Treatment Arm) | **Cutoff:** 05 Mar 2026 | **Language:** R · ggplot2 | **License:** CC BY 4.0
 
 ---
 
@@ -16,9 +16,10 @@ Swimmer plots are well established in oncology publications, yet existing open-s
 | Tumor histologies | Single histology or uncalibrated mix | Five independently calibrated profiles |
 | Cross-domain consistency | Swimmer and waterfall from different studies | Same 400 patients, 13 ADaM domains, 131,690 records |
 | Follow-up encoding | Treatment bar only | Separate follow-up bar extending to OS date |
-| Outcome symbols | Rarely distinguished | Arrow (ongoing) · ✕ (death) · \| (discontinuation) |
+| Outcome symbols | Rarely distinguished | Arrow (ongoing) · ✕ (death) · ✕ red (discontinuation) |
 | Response markers | Color only, or not time-located | Shape + color markers at exact assessment month |
-| Sorting variants | Duration only | Three purpose-built variants (BOR · duration · tumor type) |
+| Liver mets annotation | Not shown | Y/N column per patient |
+| Sorting | Duration only | BOR then descending duration within each BOR group |
 | Reproducibility | No fixed seed, or seed not stated | `set.seed(42)` — bitwise-identical across R ≥ 4.1 |
 | Calibration traceability | Unspecified | Anchored to KEYNOTE-189, IMbrave150, OlympiAD, KEYNOTE-177, NAPOLI-1 |
 
@@ -26,7 +27,7 @@ Swimmer plots are well established in oncology publications, yet existing open-s
 
 ## Why the swimmer plot complements the waterfall plot
 
-The waterfall plot answers *how much*, depth of tumor response at best assessment. The swimmer plot answers *how long* and *what happened next*, the temporal arc of each patient's journey from treatment start through follow-up or death. Used together from the same dataset they provide the complete RECIST efficacy picture that neither plot can deliver alone.
+The waterfall plot answers *how much* — depth of tumor response at best assessment. The swimmer plot answers *how long* and *what happened next* — the temporal arc of each patient's journey from treatment start through follow-up or death. Used together from the same dataset they provide the complete RECIST efficacy picture that neither plot can deliver alone.
 
 | Question | Waterfall | Swimmer |
 |---|---|---|
@@ -35,69 +36,68 @@ The waterfall plot answers *how much*, depth of tumor response at best assessmen
 | Time to first response | — | ✓ |
 | Post-treatment follow-up | — | ✓ |
 | Outcome (ongoing / death) | — | ✓ |
+| Liver metastasis status | — | ✓ |
 | Responders vs. non-responders at a glance | ✓ | ✓ |
-
-A key limitation noted in the oncology visualization literature is that classic swimmer plots display only patients with favorable responses (CR or PR), leaving SD and PD patients invisible. The three variants here address this explicitly — Variants A and B are responder-focused (suitable for publication), while Variant C adds histology stratification to reveal which tumor types drove the response signal.
 
 ---
 
 ## Visual anatomy
 
 ```
-Patient ─┤
-  ID     │
-         │  [████████████████░░░░░]──────────────────────── ▶  ongoing
-         │  [████████████░░░░░░░░░░░░░░] ✕                      death
-         │  [████████████████████] |                             discontinuation
-         │
-         └──────────────────────────────────────────────────────
-              0m     6m     12m    18m    24m    36m
-                      Months from Treatment Start
+RECIST   Liver
+Response mets
+  CR       N  │  [████████████████░░░░░]──────────────────── ▶  ongoing
+  PD       Y  │  [████████████░░░░░░░░░░░░░░] ✕                  death
+  SD       N  │  [████████████████████] ✕ (red)                   discontinuation
+              │
+              └────────────────────────────────────────────────
+                   0m     6m     12m    18m    24m    36m
+                           Months from Treatment Start
 ```
 
 | Element | Description |
 |---|---|
-| Colored solid bar | Time on treatment - color encodes tumor type |
+| Dark blue solid bar | Time on treatment |
 | Grey translucent bar | Post-treatment follow-up to OS date (off-treatment, alive) |
-| ▶ Arrow | Patient ongoing at data cutoff |
-| ✕ Symbol | Death |
-| \| Symbol | Discontinuation (not death) |
-| Filled circle (●) | Complete Response (CR) marker at assessment month |
-| Filled circle (●) | Partial Response (PR) marker at assessment month |
-| Filled triangle (▲) | Stable Disease (SD) marker |
-| Filled diamond (◆) | Progressive Disease (PD) marker |
-| × | Not Evaluable (NE) |
-| Left color strip | Tumor type - NSCLC / CRC / HCC / PDAC / BRCA |
-| BOR column | Best Overall Response label at right margin |
-| Milestone lines | Dashed verticals at 6, 12, 18, 24, 36 months |
+| ▶ Filled triangle | Patient ongoing at data cutoff |
+| ✕ Black × | Death |
+| ✕ Red × | Discontinuation (not death) |
+| Filled circle (●) | Complete Response (CR) — green |
+| Filled square (■) | Partial Response (PR) — blue |
+| Filled triangle (▲) | Stable Disease (SD) — orange |
+| Filled diamond (◆) | Progressive Disease (PD) — red |
+| Left text column | RECIST Response label, color-coded by BOR |
+| Second text column | Liver metastasis status (Y / N), red for Y, blue for N |
+| Summary box | Evaluable / Non-evaluable / Total Enrolled counts |
+| Milestone lines | Dashed verticals at 6-month intervals |
 | Alternating row shading | Guides the eye across long patient IDs |
+| Footer | "RECIST 1.1 · Data cutoff: 05 Mar 2026" |
 
 ---
 
 ## Plot variants
 
-### `swimmer_A_responders.png` - Responders (CR + PR), sorted by BOR then duration
+### `swimmer_all_treatment.png` — All treatment-arm patients
 
-Shows all treatment-arm patients with a best overall response of CR or PR. Bars sorted first by BOR group (CR above PR), then by descending treatment duration within each group. A dashed horizontal separator and group labels distinguish the two BOR tiers. Best for Phase I/II efficacy signal figures and supplementary materials in publications.
+All 263 treatment-arm patients in a single panel, sorted by BOR (CR → PR → SD → PD → NE) and by descending treatment duration within each BOR group. Evaluable and non-evaluable patients are separated by a horizontal black line. Provides a comprehensive overview of the full treatment arm.
 
-- BOR group labels in right margin
-- CR/PR separator line
-- Output: 16 × dynamic height @ 300 DPI
+- Figure dimensions: 16 × 11 in @ 120 DPI
 
-### `swimmer_B_12mo_responders.png` - Responders with ≥ 12 months on treatment
+### Per-histology panels (five files)
 
-Subset of Variant A filtered to patients who remained on treatment for at least 12 months. Highlights durable responders — a clinically meaningful cut point for regulatory submissions and dossiers. Directly addresses the question raised by reviewers: *"How many patients maintained response beyond one year?"*
+One plot per tumor type, each following the same layout as the all-patients view but scoped to a single histology. Allows direct comparison of response depth, duration, and outcome patterns within a tumor type without the density of the full-arm plot.
 
-- Same layout as Variant A
-- Output: 16 × dynamic height @ 300 DPI
+| File | Histology | Patients plotted |
+|------|-----------|----------------:|
+| `swimmer_nsclc.png` | NSCLC | 23 |
+| `swimmer_brca.png` | BRCA | 8 |
+| `swimmer_hcc.png` | HCC | 10 |
+| `swimmer_crc.png` | CRC | 9 |
+| `swimmer_pdac.png` | PDAC | 12 |
 
-### `swimmer_C_responders_by_histology.png` - Responders stratified by tumor type
+- Figure dimensions: 16 × 9 in @ 120 DPI each
 
-All CR + PR patients sorted first by tumor type (NSCLC → BRCA → HCC → CRC → PDAC), then by BOR and duration within each histology block. Left-margin colored rectangles and rotated tumor-type labels act as panel headers without the whitespace cost of true facets. Horizontal separator lines delineate histology groups. Best for basket trial figures comparing response depth and duration across tumor types.
-
-- Left-margin tumor-type strip (colored rect + rotated label)
-- Histology separator lines
-- Output: 20 × dynamic height @ 300 DPI
+> **Note:** Per-histology plots render only the evaluable subset of each tumor type rather than the full enrollment count. Patients with `EOSSTT` records but no evaluable RECIST assessment (`eval = FALSE`) are excluded from the per-histology outputs as currently filtered.
 
 ---
 
@@ -109,7 +109,7 @@ Design   Phase II/III Open-Label Randomized Basket Trial
 N        400  (TRT = 263 · CTL = 137 · 2:1 ratio)
 Records  131,690 across 13 ADaM domains
 Seed     42 · fully reproducible
-Cutoff   31 May 2026
+Cutoff   05 Mar 2026
 ```
 
 ### Tumor-stratified response parameters (treatment arm)
@@ -126,21 +126,20 @@ Cutoff   31 May 2026
 
 | Domain | Description | Rows | Key variables used |
 |--------|-------------|-----:|---|
-| ADSL | Subject-level | 400 | `USUBJID`, `ARM`, `TUMORTYPE`, `TRTSDT`, `TRTEDT`, `TRTDURD`, `EOSSTT`, `DCSREAS`, `BESTRSPC`, `OSCR`, `OSDTC` |
+| ADSL | Subject-level | 400 | `USUBJID`, `ARM`, `TUMORTYPE`, `TRTSDT`, `TRTEDT`, `TRTDURD`, `EOSSTT`, `DCSREAS`, `OSCR`, `OSDTC`, `LIVERMETS` |
 | ADRS | Tumor response per RECIST 1.1 | 1,211 | `PARAMCD="OVRLRESP"`, `ADT`, `AVALC` (CR/PR/SD/PD/NE) |
 
 ```r
 # Load required ADaM domains
-ADSL <- read.csv("ADSL.csv") |>
-  mutate(across(c(TRTSDT, TRTEDT, CUTDTC, OSDTC, PFSDTC), as.Date))
+adsl <- read.csv(file.path(DATA_DIR, "ADSL.csv"), stringsAsFactors = FALSE)
+adrs <- read.csv(file.path(DATA_DIR, "ADRS.csv"), stringsAsFactors = FALSE)
 
-ADRS <- read.csv("ADRS.csv") |>
-  mutate(ADT = as.Date(ADT))
+adsl$TRTSDT <- as.Date(adsl$TRTSDT)
+adsl$TRTEDT <- as.Date(adsl$TRTEDT)
+adsl$OSDTC  <- suppressWarnings(as.Date(adsl$OSDTC))
 
-# Subset to treatment arm and compute treatment duration in months
-trt <- ADSL |>
-  filter(ARM == "TREATMENT") |>
-  mutate(TRTDUR_MO = TRTDURD / DAY2MO)   # DAY2MO = 30.4375
+# Subset to treatment arm
+trt <- adsl[adsl$ARM == "TREATMENT", ]
 ```
 
 ---
@@ -149,42 +148,68 @@ trt <- ADSL |>
 
 ### Treatment bar vs. follow-up bar
 
-Two separate bar layers encode distinct clinical phases. The treatment bar (colored, tumor-type fill) runs from day 0 to the earlier of treatment end or data cutoff. The follow-up bar (grey, narrower) runs from treatment end to the OS date when a patient discontinued but survived beyond treatment end. This separation makes it visually immediate whether a patient died on treatment, died after treatment, or is still alive.
+Two separate bar layers encode distinct clinical phases. The treatment bar (dark blue, `#1F4E79`) runs from day 0 to treatment end or data cutoff for ongoing patients. The follow-up bar (grey `#808080`, narrower at 42% of bar height) runs from treatment end to the OS date when a patient discontinued but survived beyond treatment end. This separation makes it visually immediate whether a patient died on treatment, died after treatment, or is still alive.
 
 ```r
-# Treatment duration (capped at cutoff for ongoing patients)
-trt_end_dt <- if (ongoing) cutoff else trtedt
-trt_mo     <- max(as.numeric(trt_end_dt - trtsdt) / DAY2MO, 0.2)
+# Treatment duration
+trt_mo <- max((as.numeric(trtedt - trtsdt)) / DAY2MO, 0.3)
 
 # Follow-up bar (only when patient died after treatment end)
-fu_end_mo <- NA_real_
-if (!ongoing && !is.na(s$OSDTC)) {
-  osdtc <- as.Date(s$OSDTC)
-  if (!is.na(osdtc) && osdtc > trtedt)
-    fu_end_mo <- as.numeric(osdtc - trtsdt) / DAY2MO
-}
+fu_mo <- NA_real_
+if (!ong && !is.na(osdtc) && osdtc > trtedt)
+  fu_mo <- as.numeric(osdtc - trtsdt) / DAY2MO
 ```
 
 ### Response markers
 
-Each ADRS record for a patient is placed as a shaped, filled marker at its exact assessment month relative to treatment start. Marker shape encodes response category (circle = CR/PR, triangle = SD, diamond = PD, × = NE), fill color encodes the same, and stroke weight is held constant for legibility at small sizes.
+Each ADRS record is placed as a shaped, filled marker at its exact assessment month relative to treatment start. Only the first occurrence of each response category per patient is plotted to avoid overprinting. Shape encodes response category: circle = CR, square = PR, triangle = SD, diamond = PD.
 
 ```r
-resps <- pt_rs |>
-  mutate(mo = as.numeric(ADT - trtsdt) / DAY2MO) |>
-  filter(mo >= 0, mo <= trt_mo + 2) |>
-  select(mo, resp = AVALC)
+# Deduplicate: first occurrence of each response category per patient
+seen <- character(0)
+for (j in seq_len(nrow(pt_rs))) {
+  rv <- pt_rs$AVALC[j]
+  if (rv %in% names(RESP_COLORS) && !rv %in% seen) {
+    # record marker; mark as seen
+    seen <- c(seen, rv)
+  }
+}
 ```
 
 ### Outcome symbol placement
 
-End-of-bar symbols are positioned 0.5 months past the rightmost bar edge (treatment bar or follow-up bar, whichever extends further), ensuring they never overlap with bar content regardless of scale.
+End-of-bar symbols are positioned past the rightmost bar edge (treatment bar or follow-up bar, whichever extends further): 0.55 months past for ongoing patients (filled triangle), 0.35 months past for death (black ×) and discontinuation (red ×).
 
 ```r
-sym_df <- df |>
-  mutate(sx = ifelse(!is.na(fu_end_mo) & fu_end_mo > trt_mo,
-                     fu_end_mo + 0.5, trt_mo + 0.5))
+end_sym <- df |>
+  mutate(
+    x_e   = ifelse(!is.na(fu_mo) & fu_mo > trt_mo, fu_mo, trt_mo),
+    sym_x = ifelse(end_t == "ongoing", x_e + 0.55, x_e + 0.35)
+  )
 ```
+
+### Liver metastasis annotation
+
+The `LIVERMETS` variable from ADSL is displayed as a second left-margin column. Values are color-coded: red for Y, blue for N.
+
+```r
+LM_COLORS <- c(Y = "#C0392B", N = "#2B6CB0")
+```
+
+### Sorting
+
+Patients are sorted by BOR rank (CR=0, PR=1, SD=2, PD=3, NE=4), then by descending treatment duration within each BOR group. Non-evaluable patients appear below a separating horizontal black line.
+
+### Dynamic axis scaling
+
+The x-axis upper limit and milestone interval are computed from the data:
+
+```r
+max_mo <- ceiling((max_data + 2) / 3) * 3
+step   <- if (max_mo > 36) 6 else 3
+```
+
+This means per-histology plots that have shorter follow-up (e.g. PDAC) use 6-month intervals while plots with longer follow-up (e.g. BRCA, NSCLC) automatically extend to 84+ months.
 
 ---
 
@@ -192,14 +217,15 @@ sym_df <- df |>
 
 | File | Description | Dimensions |
 |------|-------------|------------|
-| `swimmer_plot.R` | Main R script — all three plot variants | |
+| `swimmer_plot.R` | Main R script — all plots | |
 | `ADSL.csv` | Subject-level dataset | 400 rows |
 | `ADRS.csv` | Overall response assessments | 1,211 rows |
-| `swimmer_A_responders.png` | CR + PR · sorted by BOR | 16 × dynamic · 300 DPI |
-| `swimmer_B_12mo_responders.png` | CR + PR · ≥12 months on treatment | 16 × dynamic · 300 DPI |
-| `swimmer_C_responders_by_histology.png` | CR + PR · stratified by tumor type | 20 × dynamic · 300 DPI |
-
-Height is computed dynamically as `max(n_patients × 0.42 + 3, 10)` inches, capped at 28–30 inches, so the plot scales gracefully from small subsets to the full cohort.
+| `swimmer_all_treatment.png` | All treatment-arm patients | 16 × 11 in · 120 DPI |
+| `swimmer_nsclc.png` | NSCLC subgroup | 16 × 9 in · 120 DPI |
+| `swimmer_brca.png` | BRCA subgroup | 16 × 9 in · 120 DPI |
+| `swimmer_hcc.png` | HCC subgroup | 16 × 9 in · 120 DPI |
+| `swimmer_crc.png` | CRC subgroup | 16 × 9 in · 120 DPI |
+| `swimmer_pdac.png` | PDAC subgroup | 16 × 9 in · 120 DPI |
 
 ---
 
@@ -210,13 +236,14 @@ Height is computed dynamically as `max(n_patients × 0.42 + 3, 10)` inches, capp
 - Communicating the proportion of patients who remain on treatment at landmark timepoints
 - Supplementary figures in clinical publications (commonly paired with waterfall plots)
 - Regulatory dossiers requiring patient-level response timelines
-- Basket trial figures where histology-specific duration patterns need to be visible
+- Basket trial figures where histology-specific duration patterns need to be visible side by side
 
 **Limitations:**
-- Does not show magnitude of tumor shrinkage, use waterfall plots
-- Does not show continuous tumor size trajectories, use spider plots
+- Does not show magnitude of tumor shrinkage — use waterfall plots
+- Does not show continuous tumor size trajectories — use spider plots
 - Becomes hard to read beyond ~100 patients per panel; consider subgroup filtering
-- Sorting by duration means individual patients cannot be tracked across multiple figures
+- Sorting by BOR then duration means individual patients cannot be easily tracked across multiple figures
+- Per-histology plots currently render the evaluable subset only; adjust `eval` filter in `sort_swimmer()` if full enrollment counts are needed
 
 ---
 
@@ -226,8 +253,9 @@ Height is computed dynamically as `max(n_patients × 0.42 + 3, 10)` inches, capp
 R >= 4.1
 ggplot2 >= 3.4
 dplyr >= 1.1
-lubridate >= 1.9
-patchwork >= 1.2   # used for multi-panel assembly in extended variants
+patchwork >= 1.2
+grid
+gridExtra
 ```
 
 No proprietary packages required. All dependencies are available on CRAN.
@@ -245,8 +273,6 @@ Finn RS, et al. Atezolizumab plus bevacizumab in unresectable hepatocellular car
 Gandhi L, et al. Pembrolizumab plus chemotherapy in metastatic non-small-cell lung cancer. *N Engl J Med.* 2018;378(22):2078–2092.
 
 Hanna R. ggswim: Create swimmer plots with ggplot2. Presented at R/Medicine 2025; Children's Hospital of Philadelphia. https://github.com/CHOP-CGTInformatics/ggswim
-
-Kaplan EL, Meier P. Nonparametric estimation from incomplete observations. *J Am Stat Assoc.* 1958;53(282):457–481.
 
 Robson M, et al. Olaparib for metastatic breast cancer in patients with a germline BRCA mutation. *N Engl J Med.* 2017;377(6):523–533.
 
