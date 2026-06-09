@@ -2,7 +2,7 @@
 
 A patient-level visualization displaying best percentage change from baseline in sum of longest diameters (SLD) per RECIST 1.1 criteria, stratified by histology and best overall response, across a fully synthetic phase II/III basket trial dataset.
 
-**Dataset:** ONCVIZ-001 · N = 400 | **Cutoff:** 05 March 2026 | **Language:** R · base graphics | **License:** CC BY 4.0
+**Dataset:** ONCVIZ-001 · N = 400 | **Cutoff:** 05 March 2026 | **Language:** R · ggplot2 | **License:** CC BY 4.0
 
 ---
 
@@ -38,12 +38,12 @@ Most published oncology visualization catalogs either rely on toy datasets too s
 | Bar above 0% | Tumor increase from baseline in SLD |
 | Dashed line at −30% | PR threshold: ≥30% reduction qualifies as Partial Response |
 | Dashed line at +20% | PD threshold: ≥20% increase indicates Progressive Disease |
-| Dark green bar | Complete Response (CR) |
-| Blue bar | Partial Response (PR) |
-| Yellow bar | Stable Disease (SD) |
-| Red bar | Progressive Disease (PD) |
+| Dark navy bar (`#1A3A7C`) | Complete Response (CR) |
+| Light blue bar (`#4A90C4`) | Partial Response (PR) |
+| Yellow/amber bar (`#E8A020`) | Stable Disease (SD) |
+| Red bar (`#C0392B`) | Progressive Disease (PD) |
 | Grey bar at 0% | Not Evaluable (NE) — no valid baseline or post-baseline measurement |
-| Tumor type strip | Color-coded strip below bars — NSCLC / CRC / HCC / PDAC / BRCA |
+| Liver mets strip | Color-coded strip below bars — Red: Liver mets Yes · Blue: Liver mets No |
 
 ---
 
@@ -72,26 +72,28 @@ pct <- if (length(pchg)) min(pchg) else 0
 
 ### `waterfall_5panel.png` — Histology-stratified 5-panel
 
-Five side-by-side panels (NSCLC, CRC, HCC, PDAC, BRCA), bars colored by best overall response. Because each tumor type was calibrated to a separate published trial, the panels behave differently: NSCLC and BRCA show deep responders, CRC and PDAC show predominantly shallow or absent response.
+Five side-by-side panels (NSCLC, BRCA, HCC, CRC, PDAC), bars colored by best overall response. Because each tumor type was calibrated to a separate published trial, the panels behave differently: NSCLC and BRCA show deep responders, CRC and PDAC show predominantly shallow or absent response.
 
-- Panel header: tumor type · N · CR/PR/SD/PD counts · ORR
-- Response legend in right margin
-- Tumor type color strip below each panel
-- Output: 26 × 13 in @ 300 DPI
+- Panel header: tumor type · N · CR/PR counts · ORR
+- Response legend in bottom margin
+- Liver mets color strip below each panel (Red = Yes, Blue = No)
+- Output: 28 × 11 in @ 150 DPI
 
-### `waterfall_treatment_arm.png` — Treatment arm, all histologies
+### `waterfall_all_treatment.png` — Treatment arm, all histologies
 
-All 263 treatment-arm patients sorted by best % change, bars colored by response. Dual legend shows response distribution (n per category) and tumor type breakdown.
+All treatment-arm patients sorted by best % change, bars colored by response. Legend shows response distribution (CR/PR/SD/PD counts) in top-right corner.
 
-- ORR annotation in top-left legend box
-- Output: 30 × 13 in @ 300 DPI
+- ORR and response counts in title
+- Output: 16 × 9 in @ 150 DPI
 
-### `waterfall_all_patients.png` — Control vs Treatment
+### `waterfall_<tumor>.png` — Per-histology single panels
 
-All 400 patients with arms separated by a dashed vertical line. Each arm annotated with its ORR. Directly visualizes the treatment effect: the treatment arm shows a clear leftward shift in bar distribution.
+Individual plots for each of the five tumor types (NSCLC, BRCA, HCC, CRC, PDAC), generated via loop.
 
-- Per-arm ORR annotation boxes
-- Output: 38 × 16 in @ 300 DPI
+- Threshold annotations: `+20%: PD threshold` and `-30%: PR threshold` labeled on dashed lines
+- Liver mets strip below bars with `Liver mets` label
+- Footer: `RECIST 1.1 · Sorted by best % change · Data cutoff: 05 Mar 2026`
+- Output: 16 × 9 in @ 150 DPI each
 
 ---
 
@@ -120,18 +122,18 @@ Cutoff   March 5, 2026
 
 | Domain | Description | Rows | Key variables |
 |--------|-------------|-----:|---|
-| ADSL | Subject-level | 400 | `USUBJID`, `ARM`, `TUMORTYPE` |
+| ADSL | Subject-level | 400 | `USUBJID`, `ARM`, `TUMORTYPE`, `LIVERMETS` |
 | ADRS | Tumor response per RECIST 1.1 | 1,211 | `PARAMCD="OVRLRESP"`, `AVALC` (CR/PR/SD/PD/NE) |
-| ADTR | Sum of longest diameters (mm) | 6,539 | `AVISIT`, `AVAL` (SLD mm), `PCHG` (% change) |
+| ADTR | Sum of longest diameters (mm) | 6,539 | `AVISIT`, `AVISITN`, `AVAL` (SLD mm), `PCHG` (% change) |
 
 ```r
 # Load the three required ADaM domains
-adsl <- read.csv("ADSL.csv", stringsAsFactors=FALSE)
-adrs <- read.csv("ADRS.csv", stringsAsFactors=FALSE)
-adtr <- read.csv("ADTR.csv", stringsAsFactors=FALSE)
+adsl <- read.csv(file.path(DATA_DIR, "ADSL.csv"), stringsAsFactors = FALSE)
+adrs <- read.csv(file.path(DATA_DIR, "ADRS.csv"), stringsAsFactors = FALSE)
+adtr <- read.csv(file.path(DATA_DIR, "ADTR.csv"), stringsAsFactors = FALSE)
 
 # Subset to treatment arm
-df_trt <- df_all[df_all$arm == "TREATMENT", ]
+df_trt <- adsl[adsl$ARM == "TREATMENT", ]
 ```
 
 ---
@@ -140,13 +142,17 @@ df_trt <- df_all[df_all$arm == "TREATMENT", ]
 
 | File | Description | Dimensions |
 |------|-------------|------------|
-| `waterfall_plot.R` | Main R script — all three plot variants | |
+| `waterfall_plot.R` | Main R script — all plot variants | |
 | `ADSL.csv` | Subject-level dataset | 400 rows |
 | `ADRS.csv` | Overall response assessments | 1,211 rows |
 | `ADTR.csv` | Tumor measurements (SLD) | 6,539 rows |
-| `waterfall_5panel.png` | Histology-stratified 5-panel | 26×13 in · 300 DPI |
-| `waterfall_treatment_arm.png` | Treatment arm · all histologies | 30×13 in · 300 DPI |
-| `waterfall_all_patients.png` | All patients · control vs treatment | 38×16 in · 300 DPI |
+| `waterfall_5panel.png` | Histology-stratified 5-panel | 28×11 in · 150 DPI |
+| `waterfall_all_treatment.png` | Treatment arm · all histologies | 16×9 in · 150 DPI |
+| `waterfall_nsclc.png` | NSCLC subgroup | 16×9 in · 150 DPI |
+| `waterfall_brca.png` | BRCA subgroup | 16×9 in · 150 DPI |
+| `waterfall_hcc.png` | HCC subgroup | 16×9 in · 150 DPI |
+| `waterfall_crc.png` | CRC subgroup | 16×9 in · 150 DPI |
+| `waterfall_pdac.png` | PDAC subgroup | 16×9 in · 150 DPI |
 
 ---
 
@@ -172,7 +178,9 @@ df_trt <- df_all[df_all$arm == "TREATMENT", ]
 R >= 4.1
 ```
 
-Base R graphics only — no external packages required.
+```r
+install.packages(c("dplyr", "ggplot2", "patchwork", "grid", "gridExtra"))
+```
 
 ---
 
