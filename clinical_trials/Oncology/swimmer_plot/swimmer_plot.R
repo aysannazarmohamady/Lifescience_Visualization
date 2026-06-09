@@ -1,371 +1,349 @@
-library(ggplot2)
 library(dplyr)
-library(tidyr)
+library(ggplot2)
 library(patchwork)
-library(lubridate)
+library(grid)
+library(gridExtra)
 
-CUTOFF  <- as.Date("2026-05-31")
-DAY2MO  <- 30.4375
+DATA_DIR   <- "./Data/V1"
+OUTPUT_DIR <- "./Outputs"
+dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
-TUMOR_COLORS <- c(NSCLC="#2166AC", BRCA="#C0392B", HCC="#27AE60",
-                  CRC="#8B4513",   PDAC="#762A83")
-RESP_COLORS  <- c(CR="#1A9641", PR="#4BACC6", SD="#F6A623",
-                  PD="#D73027", NE="#BDBDBD")
-RESP_SHAPES  <- c(CR=21, PR=21, SD=24, PD=23, NE=4)
-RESP_SIZES   <- c(CR=3.5, PR=3.0, SD=2.7, PD=2.7, NE=2.0)
-MILESTONE_MO <- c(6, 12, 18, 24, 36)
+adsl <- read.csv(file.path(DATA_DIR, "ADSL.csv"), stringsAsFactors = FALSE)
+adrs <- read.csv(file.path(DATA_DIR, "ADRS.csv"), stringsAsFactors = FALSE)
+adsl$TRTSDT <- as.Date(adsl$TRTSDT)
+adsl$TRTEDT <- as.Date(adsl$TRTEDT)
+adsl$OSDTC  <- suppressWarnings(as.Date(adsl$OSDTC))
 
-# ── 1. Data ───────────────────────────────────────────────────
-ADSL <- read.csv("ADSL.csv") |>
-  mutate(across(c(TRTSDT, TRTEDT, CUTDTC, OSDTC, PFSDTC), as.Date))
+DAY2MO   <- 30.4375
+BAR_BLUE <- "#1F4E79"
+FU_GRAY  <- "#808080"
+RESP_COLORS <- c(CR="#1A9641", PR="#4A90C4", SD="#E8A020", PD="#C0392B", NE="#999999")
+ID_COLORS   <- c(CR="#1A9641", PR="#2B6CB0", SD="#B45309", PD="#C0392B", NE="#C0392B")
+LM_COLORS   <- c(Y="#C0392B", N="#2B6CB0")
+TUMOR_ORDER <- c("NSCLC","BRCA","HCC","CRC","PDAC")
 
-ADRS <- read.csv("ADRS.csv") |>
-  mutate(ADT = as.Date(ADT))
+rank_map <- c(CR=1, PR=2, SD=3, PD=4, NE=5)
 
-trt <- ADSL |>
-  filter(ARM == "TREATMENT") |>
-  mutate(TRTDUR_MO = TRTDURD / DAY2MO)
-
-# ── 2. Build rows ─────────────────────────────────────────────
-build_patient_rows <- function(adsl_sub, adrs, cutoff = CUTOFF,
-                               sort_by_bor = FALSE, tumor_order = NULL) {
-  adrs_resp <- adrs |> filter(PARAMCD == "OVRLRESP")
-
-  rows <- lapply(seq_len(nrow(adsl_sub)), function(i) {
-    s       <- adsl_sub[i, ]
-    uid     <- s$USUBJID
-    trtsdt  <- as.Date(s$TRTSDT)
-    trtedt  <- as.Date(s$TRTEDT)
-    ongoing <- s$EOSSTT == "ONGOING"
-    dcsreas <- trimws(as.character(s$DCSREAS))
-    bor     <- trimws(as.character(ifelse(is.na(s$BESTRSPC), "NE", s$BESTRSPC)))
-    tumor   <- trimws(as.character(s$TUMORTYPE))
-    oscr    <- as.integer(s$OSCR)
-
-    trt_end_dt <- if (ongoing) cutoff else trtedt
-    trt_mo     <- max(as.numeric(trt_end_dt - trtsdt) / DAY2MO, 0.2)
-
-    fu_end_mo <- NA_real_
-    if (!ongoing && !is.na(s$OSDTC)) {
-      osdtc <- as.Date(s$OSDTC)
-      if (!is.na(osdtc) && osdtc > trtedt)
-        fu_end_mo <- as.numeric(osdtc - trtsdt) / DAY2MO
-    }
-
-    pt_rs <- adrs_resp |> filter(USUBJID == uid) |> arrange(ADT)
-    resps <- pt_rs |>
-      mutate(mo = as.numeric(ADT - trtsdt) / DAY2MO) |>
-      filter(mo >= 0, mo <= trt_mo + 2) |>
-      select(mo, resp = AVALC)
-
-    list(uid = uid, tumor = tumor, bor = bor, ongoing = ongoing,
-         dcsreas = dcsreas, oscr = oscr,
-         trt_mo = trt_mo, fu_end_mo = fu_end_mo, resps = resps)
-  })
-
-  df <- bind_rows(lapply(rows, function(r) {
-    data.frame(uid = r$uid, tumor = r$tumor, bor = r$bor,
-               ongoing = r$ongoing, dcsreas = r$dcsreas, oscr = r$oscr,
-               trt_mo = r$trt_mo, fu_end_mo = r$fu_end_mo,
-               stringsAsFactors = FALSE)
-  }))
-
-  resp_df <- bind_rows(lapply(rows, function(r) {
-    if (nrow(r$resps) == 0) return(NULL)
-    r$resps |> mutate(uid = r$uid)
-  }))
-
-  df <- df |> mutate(
-    bor_order = case_when(bor == "CR" ~ 0, bor == "PR" ~ 1, TRUE ~ 2)
-  )
-
-  if (sort_by_bor) {
-    df <- df |> arrange(bor_order, desc(trt_mo))
-  } else if (!is.null(tumor_order)) {
-    df <- df |>
-      mutate(tumor_order = match(tumor, tumor_order)) |>
-      arrange(tumor_order, bor_order, desc(trt_mo))
-  } else {
-    df <- df |> arrange(desc(trt_mo))
-  }
-
-  df <- df |> mutate(y = rev(seq_len(n())))
-  list(df = df, resp_df = if (!is.null(resp_df)) resp_df else data.frame())
+best_resp <- function(uid) {
+  rs <- adrs[adrs$USUBJID == uid & adrs$PARAMCD == "OVRLRESP" &
+               adrs$AVALC %in% names(rank_map), ]
+  if (nrow(rs) == 0) return("NE")
+  rs$AVALC[which.min(rank_map[rs$AVALC])]
 }
 
-# ── 3. Core plot ──────────────────────────────────────────────
-draw_swimmer <- function(df, resp_df, title_str,
-                         show_bor_labels = TRUE,
-                         tumor_order = NULL) {
-  n      <- nrow(df)
-  max_mo <- max(c(df$trt_mo, df$fu_end_mo), na.rm = TRUE)
-  max_mo <- max(max_mo + 2, 14)
-  bor_x  <- max_mo + 3.5
-  top_y  <- n + 1.5
+build_swimmer_data <- function(adsl_sub) {
+  rows      <- list()
+  resp_rows <- list()
 
-  df$uid_short <- sub(".*-", "", df$uid)
-  df$uid_short <- factor(df$uid_short, levels = df$uid_short[order(df$y)])
+  for (i in seq_len(nrow(adsl_sub))) {
+    pt     <- adsl_sub[i, ]
+    uid    <- pt$USUBJID
+    short  <- sub("^[^-]+-[^-]+-", "", uid)
+    trtsdt <- pt$TRTSDT
+    trtedt <- pt$TRTEDT
+    ong    <- pt$EOSSTT == "ONGOING"
+    dc     <- trimws(pt$DCSREAS)
+    bor    <- best_resp(uid)
+    lm     <- trimws(pt$LIVERMETS)
+    oscr   <- as.integer(pt$OSCR)
 
-  p <- ggplot() +
-    # Alternating rows
-    geom_rect(data = df |> filter((y %% 2) == 0),
-              aes(xmin = -1.5, xmax = bor_x + 2,
-                  ymin = y - 0.5, ymax = y + 0.5),
-              fill = "#F5F7FA", alpha = 0.6) +
-    # Milestone lines
-    geom_vline(xintercept = MILESTONE_MO[MILESTONE_MO <= max_mo],
-               linetype = "dashed", color = "#AAAAAA",
-               linewidth = 0.7, alpha = 0.65) +
-    annotate("text",
-             x = MILESTONE_MO[MILESTONE_MO <= max_mo],
-             y = top_y + 0.3,
-             label = paste0(MILESTONE_MO[MILESTONE_MO <= max_mo], "m"),
-             size = 2.8, color = "#555555",
-             fontface = "bold.italic", vjust = 0) +
-    # Tumor color strip
-    geom_rect(data = df,
-              aes(xmin = -0.15, xmax = 0,
-                  ymin = y - 0.3, ymax = y + 0.3,
-                  fill = tumor),
-              alpha = 0.95) +
-    scale_fill_manual(values = TUMOR_COLORS, guide = "none") +
-    # Treatment bars
-    geom_rect(data = df,
-              aes(xmin = 0.05, xmax = trt_mo,
-                  ymin = y - 0.28, ymax = y + 0.28,
-                  color = tumor),
-              fill = NA, linewidth = 0) +
-    {
-      tc_df <- df |> mutate(fill_col = TUMOR_COLORS[tumor])
-      geom_rect(data = tc_df,
-                aes(xmin = 0.05, xmax = trt_mo,
-                    ymin = y - 0.28, ymax = y + 0.28),
-                fill = tc_df$fill_col, alpha = 0.88)
-    } +
-    # Follow-up bars
-    {
-      fu_df <- df |> filter(!is.na(fu_end_mo), fu_end_mo > trt_mo)
-      if (nrow(fu_df) > 0)
-        geom_rect(data = fu_df,
-                  aes(xmin = trt_mo, xmax = fu_end_mo,
-                      ymin = y - 0.14, ymax = y + 0.14),
-                  fill = "#BBBBBB", alpha = 0.45)
-      else geom_blank()
+    trt_mo <- max((as.numeric(trtedt - trtsdt)) / DAY2MO, 0.3)
+    fu_mo  <- NA_real_
+    osdtc  <- pt$OSDTC
+    if (!ong && !is.na(osdtc) && osdtc > trtedt)
+      fu_mo <- as.numeric(osdtc - trtsdt) / DAY2MO
+
+    pt_rs <- adrs[adrs$USUBJID == uid & adrs$PARAMCD == "OVRLRESP", ]
+    pt_rs$ADT <- suppressWarnings(as.Date(pt_rs$ADT))
+    pt_rs     <- pt_rs[!is.na(pt_rs$ADT), ]
+    pt_rs$mo  <- as.numeric(pt_rs$ADT - trtsdt) / DAY2MO
+    pt_rs     <- pt_rs[pt_rs$mo >= 0 & pt_rs$mo <= trt_mo + 1, ]
+    pt_rs     <- pt_rs[order(pt_rs$mo), ]
+    seen <- character(0)
+    for (j in seq_len(nrow(pt_rs))) {
+      rv <- pt_rs$AVALC[j]
+      if (rv %in% names(RESP_COLORS) && !rv %in% seen) {
+        resp_rows[[length(resp_rows)+1]] <- data.frame(
+          uid=uid, mo=pt_rs$mo[j], resp=rv, stringsAsFactors=FALSE)
+        seen <- c(seen, rv)
+      }
     }
 
-  # Response markers
-  if (!is.null(resp_df) && nrow(resp_df) > 0) {
-    rdf <- resp_df |>
-      inner_join(df |> select(uid, y), by = "uid") |>
-      filter(resp %in% names(RESP_COLORS)) |>
-      mutate(fill_col  = RESP_COLORS[resp],
-             shape_val = RESP_SHAPES[resp],
-             size_val  = RESP_SIZES[resp])
-    p <- p +
-      geom_point(data = rdf,
-                 aes(x = mo, y = y),
-                 shape = rdf$shape_val,
-                 fill  = rdf$fill_col,
-                 color = "black",
-                 size  = rdf$size_val,
-                 stroke = 0.4)
+    end_t <- if (ong) "ongoing" else
+              if (oscr == 1 || dc == "Death") "death" else
+              if (grepl("Consent", dc)) "withdraw" else "disc"
+
+    rows[[i]] <- data.frame(
+      uid=uid, short=short, lm=lm, bor=bor,
+      ong=ong, end_t=end_t, trt_mo=trt_mo, fu_mo=fu_mo,
+      eval=bor!="NE", stringsAsFactors=FALSE)
   }
+  list(df=bind_rows(rows),
+       resp_df=if (length(resp_rows)>0) bind_rows(resp_rows) else data.frame())
+}
 
-  # End-of-bar symbols
-  sym_df <- df |>
-    mutate(sx = ifelse(!is.na(fu_end_mo) & fu_end_mo > trt_mo,
-                       fu_end_mo + 0.5, trt_mo + 0.5))
+sort_swimmer <- function(df) {
+  bor_n <- c(CR=0, PR=1, SD=2, PD=3, NE=4)
+  df$bor_n <- bor_n[df$bor]
+  df$bor_n[is.na(df$bor_n)] <- 4
+  ev <- df[df$eval, ]  |> arrange(bor_n, desc(trt_mo))
+  ne <- df[!df$eval, ] |> arrange(desc(trt_mo))
+  out <- bind_rows(ev, ne)
+  out$y <- nrow(out):1
+  list(df=out, n_eval=nrow(ev))
+}
 
-  p <- p +
-    # Ongoing arrows
-    geom_segment(data = sym_df |> filter(ongoing),
-                 aes(x = sx, xend = sx + 1.6, y = y, yend = y,
-                     color = tumor),
-                 arrow = arrow(length = unit(0.15, "cm"), type = "closed"),
-                 linewidth = 0.9) +
-    scale_color_manual(values = TUMOR_COLORS, guide = "none") +
-    # Death
-    geom_point(data = sym_df |> filter(!ongoing, (oscr == 1 | dcsreas == "Death")),
-               aes(x = sx, y = y), shape = 4, size = 2.5,
-               color = "#111111", stroke = 1.5) +
-    # Discontinued
-    geom_point(data = sym_df |> filter(!ongoing, oscr != 1, dcsreas != "Death"),
-               aes(x = sx, y = y), shape = 124, size = 2.5,
-               color = "#555555", stroke = 1.2) +
-    # BOR separator
-    geom_vline(xintercept = max_mo + 2, color = "#DDDDDD",
-               linewidth = 0.6, linetype = "dotted") +
-    # BOR header
-    annotate("text", x = bor_x, y = top_y + 0.3,
-             label = "BOR", fontface = "bold", size = 3.5,
-             color = "#333333", vjust = 0) +
-    # BOR values
-    geom_text(data = df,
-              aes(x = bor_x, y = y, label = bor,
-                  color = bor),
-              fontface = "bold", size = 3, show.legend = FALSE) +
-    scale_color_manual(values = c(TUMOR_COLORS, RESP_COLORS), guide = "none")
+draw_swimmer <- function(adsl_sub, title_str, fname,
+                         fig_w=16, fig_h=9) {
 
-  # BOR group labels
-  if (show_bor_labels) {
-    for (bv in c("CR", "PR")) {
-      grp <- df |> filter(bor == bv)
-      if (nrow(grp) == 0) next
-      mid_y <- (max(grp$y) + min(grp$y)) / 2
-      p <- p + annotate("label", x = bor_x + 1.5, y = mid_y,
-                        label = bv, size = 2.8, fontface = "bold",
-                        color = RESP_COLORS[bv],
-                        fill = "white", label.size = 0.4,
-                        label.padding = unit(0.2, "lines"))
-    }
-    cr_g <- df |> filter(bor == "CR")
-    pr_g <- df |> filter(bor == "PR")
-    if (nrow(cr_g) > 0 && nrow(pr_g) > 0) {
-      sep_y <- (min(cr_g$y) + max(pr_g$y)) / 2
-      p <- p + geom_hline(yintercept = sep_y,
-                          color = "#AAAAAA", linewidth = 0.6,
-                          linetype = "dashed", alpha = 0.6)
-    }
-  }
+  res        <- build_swimmer_data(adsl_sub)
+  df_raw     <- res$df
+  resp_df    <- res$resp_df
+  sorted     <- sort_swimmer(df_raw)
+  df         <- sorted$df
+  n_eval     <- sorted$n_eval
+  n          <- nrow(df)
+  n_ne       <- n - n_eval
 
-  p <- p +
-    scale_x_continuous(
-      name   = "Months from Treatment Start",
-      breaks = seq(0, max_mo + 4, 6),
-      limits = c(-1.5, bor_x + 2.5)
-    ) +
-    scale_y_continuous(
-      breaks = df$y,
-      labels = df$uid_short,
-      limits = c(-0.5, top_y + 1)
-    ) +
-    labs(title = title_str) +
-    theme_minimal(base_size = 10) +
-    theme(
-      plot.background  = element_rect(fill = "#FAFAFA", color = NA),
-      panel.background = element_rect(fill = "#FAFAFA", color = NA),
-      panel.grid.major.x = element_line(color = "#EBEBEB", linewidth = 0.5),
-      panel.grid.major.y = element_blank(),
-      panel.grid.minor   = element_blank(),
-      axis.text.y   = element_text(size = 7, family = "mono"),
-      axis.text.x   = element_text(size = 8),
-      axis.title.x  = element_text(size = 10, face = "bold", margin = margin(t = 8)),
-      axis.title.y  = element_blank(),
-      plot.title    = element_text(size = 12, face = "bold",
-                                   color = "#1A1A2E", margin = margin(b = 14)),
-      legend.position = "none"
+  all_ends <- c(df$trt_mo, df$fu_mo[!is.na(df$fu_mo)])
+  max_data <- max(all_ends)
+  max_mo   <- ceiling((max_data + 2) / 3) * 3
+  step     <- if (max_mo > 36) 6 else 3
+  mstones  <- seq(step, max_mo, by = step)
+
+  ax_h_in   <- fig_h * 0.815
+  y_range   <- n + 2.0
+  in_per_u  <- ax_h_in / y_range
+  bar_h_pt  <- min(0.62 * in_per_u * 72, 14.0)
+  BAR_FRAC  <- bar_h_pt / (in_per_u * 72)
+  mk_sz_pt  <- bar_h_pt
+  MK_SIZE   <- mk_sz_pt / 2.845   # ggplot size in mm ~ pt/2.845
+
+  df$y <- as.numeric(df$y)
+
+  bar_data <- df |>
+    mutate(bar_end = trt_mo,
+           fu_end  = ifelse(!is.na(fu_mo) & fu_mo > trt_mo, fu_mo, NA_real_))
+
+  fu_data <- bar_data |> filter(!is.na(fu_end))
+
+  resp_plot_df <- if (nrow(resp_df) > 0)
+    left_join(resp_df, df[, c("uid","y")], by="uid") else NULL
+
+  end_sym <- df |>
+    mutate(
+      x_e   = ifelse(!is.na(fu_mo) & fu_mo > trt_mo, fu_mo, trt_mo),
+      sym_x = ifelse(end_t == "ongoing", x_e + 0.55, x_e + 0.35)
     )
 
-  p
-}
+  p <- ggplot() +
+    geom_hline(yintercept = seq(0.5, n+1.5, 1),
+               color = NA, linewidth = 0) +
+    theme_classic(base_size = 10) +
+    theme(
+      panel.background   = element_rect(fill="white", color=NA),
+      panel.grid         = element_blank(),
+      axis.line          = element_blank(),
+      axis.ticks.y       = element_blank(),
+      axis.text.y        = element_blank(),
+      axis.title.y       = element_blank(),
+      axis.text.x        = element_text(size=9.5),
+      axis.title.x       = element_blank(),
+      plot.title         = element_text(face="bold", size=14,
+                                        hjust=0.5, margin=margin(b=12)),
+      legend.position    = "none",
+      plot.margin        = margin(6, 6, 4, 6)
+    )
 
-# ── 4. Summary box ────────────────────────────────────────────
-summary_text <- function(df, subtitle) {
-  n  <- nrow(df)
-  bc <- table(df$bor)
-  cr <- as.integer(bc["CR"]); if (is.na(cr)) cr <- 0
-  pr <- as.integer(bc["PR"]); if (is.na(pr)) pr <- 0
-  sd <- as.integer(bc["SD"]); if (is.na(sd)) sd <- 0
-  pd <- as.integer(bc["PD"]); if (is.na(pd)) pd <- 0
-  on <- sum(df$ongoing)
-  orr <- (cr + pr) / n * 100
-  paste0(subtitle, "\n",
-         strrep("\u2500", 24), "\n",
-         "N = ", n, "    Ongoing: ", on,
-         " (", round(on / n * 100), "%)\n",
-         "CR ", cr, "    PR ", pr,
-         "    SD ", sd, "    PD ", pd, "\n",
-         "ORR = ", round(orr, 1), "%")
-}
+  for (y_even in df$y[df$y %% 2 == 0]) {
+    p <- p + annotate("rect",
+      xmin=-Inf, xmax=Inf,
+      ymin=y_even-0.5, ymax=y_even+0.5,
+      fill="#EFF4FB", alpha=0.55)
+  }
 
-# ── 5. Legend ─────────────────────────────────────────────────
-build_legend_plot <- function(resp_subset = c("CR","PR","SD","PD")) {
-  df_leg <- data.frame(x = 1, y = 1)
-  p <- ggplot(df_leg) +
-    # Tumor patches
-    lapply(seq_along(TUMOR_COLORS), function(i) {
-      annotate("rect", xmin = 0.05, xmax = 0.35,
-               ymin = 20 - i * 1.2, ymax = 20 - i * 1.2 + 0.8,
-               fill = TUMOR_COLORS[i], alpha = 0.87)
-    }) |> (\(x) Reduce("+", x, ggplot(df_leg)))() +
-    xlim(0, 4) + ylim(0, 24) +
+  for (mo in mstones) {
+    p <- p +
+      annotate("segment",
+               x=mo, xend=mo, y=0.2, yend=n+2,
+               color="#BBBBBB", linewidth=0.8, linetype="dashed") +
+      annotate("text",
+               x=mo, y=n+1.55,
+               label=as.character(mo),
+               hjust=0.5, vjust=0, size=2.7,
+               fontface="bold.italic", color="#444444")
+  }
+
+  p <- p +
+    geom_tile(data=bar_data,
+              aes(x=trt_mo/2, y=y, width=trt_mo, height=BAR_FRAC),
+              fill=BAR_BLUE, alpha=0.93)
+
+  if (nrow(fu_data) > 0) {
+    fu_data2 <- fu_data |>
+      mutate(fu_w = fu_end - trt_mo,
+             fu_cx = trt_mo + fu_w/2)
+    p <- p +
+      geom_tile(data=fu_data2,
+                aes(x=fu_cx, y=y, width=fu_w, height=BAR_FRAC*0.42),
+                fill=FU_GRAY, alpha=0.75)
+  }
+
+  if (!is.null(resp_plot_df) && nrow(resp_plot_df) > 0) {
+    mk_shapes <- c(CR=16, PR=15, SD=17, PD=18)
+    for (rv in intersect(names(mk_shapes), unique(resp_plot_df$resp))) {
+      sub_r <- resp_plot_df[resp_plot_df$resp == rv, ]
+      p <- p + geom_point(data=sub_r,
+                           aes(x=mo, y=y),
+                           shape=mk_shapes[rv],
+                           size=MK_SIZE,
+                           color=RESP_COLORS[rv],
+                           stroke=0.4)
+    }
+  }
+
+  ong_df  <- end_sym[end_sym$end_t == "ongoing", ]
+  dth_df  <- end_sym[end_sym$end_t == "death",   ]
+  disc_df <- end_sym[end_sym$end_t %in% c("withdraw","disc"), ]
+
+  if (nrow(ong_df) > 0)
+    p <- p + geom_point(data=ong_df, aes(x=sym_x, y=y),
+                        shape=17, size=MK_SIZE*1.05,
+                        color=BAR_BLUE)
+  if (nrow(dth_df) > 0)
+    p <- p + geom_point(data=dth_df, aes(x=sym_x, y=y),
+                        shape=4, size=MK_SIZE*0.92,
+                        color="black", stroke=1.8)
+  if (nrow(disc_df) > 0)
+    p <- p + geom_point(data=disc_df, aes(x=sym_x, y=y),
+                        shape=4, size=MK_SIZE*0.92,
+                        color="#C0392B", stroke=1.8)
+
+  if (n_ne > 0) {
+    sep_y <- n_eval + 0.5
+    p <- p + geom_hline(yintercept=sep_y, linewidth=1.3, color="black")
+  }
+
+  p <- p +
+    scale_x_continuous(breaks=mstones,
+                       labels=as.character(mstones),
+                       limits=c(0, max_mo+0.5),
+                       expand=c(0,0)) +
+    scale_y_continuous(limits=c(0.2, n+2.0), expand=c(0,0)) +
+    labs(title=title_str)
+
+  summary_txt <- sprintf(
+    "Summary\nEvaluable       %d\nNon-evaluable   %d\nTotal Enrolled  %d",
+    n_eval, n_ne, n)
+
+  p <- p + annotate("label",
+    x=max_mo*0.97, y=1.8,
+    label=summary_txt,
+    hjust=1, vjust=0,
+    size=3.4, family="mono",
+    fill=BAR_BLUE, color="white",
+    label.r=unit(0.25,"lines"),
+    label.padding=unit(0.45,"lines"),
+    alpha=0.9)
+
+  metadata <- df |>
+    mutate(
+      id_x     = -0.5,
+      recist_x = -1.5,
+      lm_x     = -2.6
+    )
+
+  p <- p +
+    geom_text(data=metadata,
+              aes(x=id_x, y=y, label=short,
+                  color=bor),
+              hjust=1, size=2.4, family="mono") +
+    geom_text(data=metadata,
+              aes(x=recist_x, y=y, label=bor,
+                  color=bor),
+              hjust=0.5, size=2.8, fontface="bold") +
+    geom_text(data=metadata,
+              aes(x=lm_x, y=y, label=lm),
+              hjust=0.5, size=2.8, fontface="bold",
+              color=ifelse(metadata$lm=="Y", LM_COLORS["Y"], LM_COLORS["N"])) +
+    scale_color_manual(values=ID_COLORS) +
+    annotate("text", x=-1.5, y=n+1.55,
+             label="RECIST\nResponse", hjust=0.5, vjust=0,
+             size=2.5, fontface="bold", color="#111111", lineheight=1.2) +
+    annotate("text", x=-2.6, y=n+1.55,
+             label="Liver\nmets", hjust=0.5, vjust=0,
+             size=2.5, fontface="bold", color="#111111", lineheight=1.2)
+
+  legend_df <- data.frame(
+    x     = rep(1:9, each=1),
+    label = c("On Treatment", "Off Treatment / Follow-Up",
+              "Still on Treatment",
+              "CR","PR","SD","PD","Death","Discontinuation"),
+    type  = c("bar_blue","bar_gray","arrow",
+              "CR","PR","SD","PD","death","disc"),
+    stringsAsFactors = FALSE
+  )
+
+  leg_p <- ggplot() +
+    annotate("rect", xmin=0.05, xmax=0.18, ymin=0.62, ymax=0.72,
+             fill=BAR_BLUE, alpha=0.93) +
+    annotate("text", x=0.21, y=0.67, label="On Treatment",
+             hjust=0, size=3.3) +
+    annotate("rect", xmin=0.05, xmax=0.18, ymin=0.38, ymax=0.48,
+             fill=FU_GRAY, alpha=0.75) +
+    annotate("text", x=0.21, y=0.43,
+             label="Off Treatment and On Study Follow-Up",
+             hjust=0, size=3.3) +
+    annotate("point", x=0.115, y=0.19, shape=17, size=3.5, color=BAR_BLUE) +
+    annotate("text",  x=0.21,  y=0.19, label="Still on Treatment",
+             hjust=0, size=3.3) +
+    annotate("point", x=0.62, y=0.87, shape=16, size=3.5,
+             color=RESP_COLORS["CR"]) +
+    annotate("text",  x=0.66, y=0.87, label="CR", hjust=0, size=3.3) +
+    annotate("point", x=0.72, y=0.87, shape=15, size=3.2,
+             color=RESP_COLORS["PR"]) +
+    annotate("text",  x=0.76, y=0.87, label="PR", hjust=0, size=3.3) +
+    annotate("point", x=0.82, y=0.87, shape=17, size=3.2,
+             color=RESP_COLORS["SD"]) +
+    annotate("text",  x=0.86, y=0.87, label="SD", hjust=0, size=3.3) +
+    annotate("point", x=0.92, y=0.87, shape=18, size=3.5,
+             color=RESP_COLORS["PD"]) +
+    annotate("text",  x=0.96, y=0.87, label="PD", hjust=0, size=3.3) +
+    annotate("point", x=0.62, y=0.62, shape=4, size=3.5,
+             color="black", stroke=1.8) +
+    annotate("text",  x=0.66, y=0.62, label="Death", hjust=0, size=3.3) +
+    annotate("point", x=0.62, y=0.38, shape=4, size=3.5,
+             color="#C0392B", stroke=1.8) +
+    annotate("text",  x=0.66, y=0.38, label="Discontinuation",
+             hjust=0, size=3.3) +
+    xlim(0, 1.15) + ylim(0, 1) +
     theme_void() +
-    theme(plot.background = element_rect(fill = "#FAFAFA", color = NA))
-  # Note: for production, use cowplot or ggpubr for proper legends
-  p
+    theme(plot.margin=margin(2,2,2,2))
+
+  png(fname, width=fig_w, height=fig_h, units="in", res=120)
+  print(
+    p + inset_element(leg_p,
+                      left=0.78, right=1.02,
+                      bottom=0.10, top=0.90,
+                      align_to="plot")
+  )
+  dev.off()
+  message("  Saved: ", basename(fname))
 }
 
-# ── 6. Variants ───────────────────────────────────────────────
-# Variant A — Responders (CR + PR)
-adsl_A  <- trt |> filter(BESTRSPC %in% c("CR","PR"))
-res_A   <- build_patient_rows(adsl_A, ADRS, CUTOFF, sort_by_bor = TRUE)
-df_A    <- res_A$df;  rsp_A <- res_A$resp_df
+trt <- adsl[adsl$ARM == "TREATMENT", ]
 
-p_A <- draw_swimmer(df_A, rsp_A,
-  "Swimmer Plot \u2014 ONCVIZ-001 \u00b7 Vizatinib 300 mg QD\nResponders (CR + PR)  \u00b7  Treatment Arm  \u00b7  Cutoff: 31 May 2026",
-  show_bor_labels = TRUE)
+draw_swimmer(trt,
+  "Swimmer Plot: ONCVIZ-001 \u00b7 Vizatinib 300mg QD \u2014 All Patients  \u00b7  Treatment Arm",
+  file.path(OUTPUT_DIR, "swimmer_all_treatment.png"),
+  fig_w=16, fig_h=11)
 
-h_A <- max(nrow(df_A) * 0.42 + 3, 10)
-ggsave("swimmer_A_responders.png", p_A,
-       width = 16, height = min(h_A, 28),
-       dpi = 300, bg = "#FAFAFA")
-cat("Saved: swimmer_A_responders.png\n")
-
-
-# Variant B — ≥12 months + Responders
-adsl_B <- trt |> filter(TRTDUR_MO >= 12, BESTRSPC %in% c("CR","PR"))
-res_B  <- build_patient_rows(adsl_B, ADRS, CUTOFF, sort_by_bor = TRUE)
-df_B   <- res_B$df;  rsp_B <- res_B$resp_df
-
-p_B <- draw_swimmer(df_B, rsp_B,
-  "Swimmer Plot \u2014 ONCVIZ-001 \u00b7 Vizatinib 300 mg QD\nResponders (CR + PR) with \u226512 Months on Treatment  \u00b7  Cutoff: 31 May 2026",
-  show_bor_labels = TRUE)
-
-h_B <- max(nrow(df_B) * 0.42 + 3, 10)
-ggsave("swimmer_B_12mo_responders.png", p_B,
-       width = 16, height = min(h_B, 28),
-       dpi = 300, bg = "#FAFAFA")
-cat("Saved: swimmer_B_12mo_responders.png\n")
-
-
-# Variant C — Responders by Tumor Type
-TUMOR_ORDER <- c("NSCLC","BRCA","HCC","CRC","PDAC")
-adsl_C <- trt |> filter(BESTRSPC %in% c("CR","PR"))
-res_C  <- build_patient_rows(adsl_C, ADRS, CUTOFF, tumor_order = TUMOR_ORDER)
-df_C   <- res_C$df;  rsp_C <- res_C$resp_df
-
-p_C <- draw_swimmer(df_C, rsp_C,
-  "Swimmer Plot \u2014 ONCVIZ-001 \u00b7 Vizatinib 300 mg QD\nResponders (CR + PR) by Tumor Type  \u00b7  Treatment Arm  \u00b7  Cutoff: 31 May 2026",
-  show_bor_labels = FALSE, tumor_order = TUMOR_ORDER)
-
-# Add tumor group panel labels (left strip)
-tumor_groups <- df_C |>
-  group_by(tumor) |>
-  summarise(y_top = max(y), y_bot = min(y), .groups = "drop") |>
-  mutate(mid_y = (y_top + y_bot) / 2,
-         fill_col = TUMOR_COLORS[tumor])
-
-for (i in seq_len(nrow(tumor_groups))) {
-  tg <- tumor_groups[i, ]
-  p_C <- p_C +
-    annotate("rect",
-             xmin = -1.4, xmax = -0.2,
-             ymin = tg$y_bot - 0.45, ymax = tg$y_top + 0.45,
-             fill = tg$fill_col, alpha = 0.12) +
-    annotate("text",
-             x = -0.9, y = tg$mid_y, label = tg$tumor,
-             angle = 90, fontface = "bold", size = 3,
-             color = tg$fill_col) +
-    annotate("segment",
-             x = -1.5, xend = max(df_C$trt_mo, na.rm=TRUE) + 6,
-             y = tg$y_bot - 0.55, yend = tg$y_bot - 0.55,
-             color = "#CCCCCC", linewidth = 0.6)
+for (tumor in TUMOR_ORDER) {
+  sub <- trt[trt$TUMORTYPE == tumor, ]
+  draw_swimmer(sub,
+    sprintf("Swimmer Plot: ONCVIZ-001 \u00b7 Vizatinib 300mg QD \u2014 All Patients  \u00b7  %s", tumor),
+    file.path(OUTPUT_DIR, sprintf("swimmer_%s.png", tolower(tumor))),
+    fig_w=16, fig_h=9)
 }
 
-h_C <- max(nrow(df_C) * 0.42 + 3, 10)
-ggsave("swimmer_C_responders_by_histology.png", p_C,
-       width = 20, height = min(h_C, 30),
-       dpi = 300, bg = "#FAFAFA")
-cat("Saved: swimmer_C_responders_by_histology.png\n")
-
-cat("\nAll 3 variants complete.\n")
+message("All swimmer plots saved to: ", OUTPUT_DIR)
