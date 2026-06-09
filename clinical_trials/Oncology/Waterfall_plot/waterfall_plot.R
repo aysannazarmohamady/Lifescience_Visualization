@@ -1,324 +1,326 @@
-library(grDevices)
-library(graphics)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(grid)
+library(gridExtra)
 
-ADSL_PATH <- "ADSL.csv"
-ADRS_PATH <- "ADRS.csv"
-ADTR_PATH <- "ADTR.csv"
-OUTPUT_DIR <- ""
-out <- function(f) if (OUTPUT_DIR == "") f else file.path(OUTPUT_DIR, f)
+DATA_DIR   <- "./Data/V1"
+OUTPUT_DIR <- "./Outputs"
+dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
-RESP_COLORS <- c(CR="#1a6b3c", PR="#2b83ba", SD="#fdae61", PD="#d7191c", NE="#7f7f7f")
-TUMOR_COLORS <- c(NSCLC="#2b83ba", CRC="#1a9641", HCC="#e6007e", PDAC="#d95f02", BRCA="#7b2d8b")
-TUMOR_ORDER <- c("NSCLC","CRC","HCC","PDAC","BRCA")
-PR_TH <- -30
-PD_TH <- 20
-DPI <- 300
-CUTOFF <- "Data cutoff: 05 Mar 2026"
+adsl <- read.csv(file.path(DATA_DIR, "ADSL.csv"), stringsAsFactors = FALSE)
+adtr <- read.csv(file.path(DATA_DIR, "ADTR.csv"), stringsAsFactors = FALSE)
+adrs <- read.csv(file.path(DATA_DIR, "ADRS.csv"), stringsAsFactors = FALSE)
 
-adsl <- read.csv(ADSL_PATH, stringsAsFactors=FALSE)
-adrs <- read.csv(ADRS_PATH, stringsAsFactors=FALSE)
-adtr <- read.csv(ADTR_PATH, stringsAsFactors=FALSE)
+RESP_COLORS <- c(CR="#1A3A7C", PR="#4A90C4", SD="#E8A020", PD="#C0392B", NE="#AAAAAA")
+LM_COLORS   <- c(Y="#C0392B", N="#2B6CB0")
+TUMOR_ORDER <- c("NSCLC","BRCA","HCC","CRC","PDAC")
+PR_TH <- -30; PD_TH <- 20
 
-build_df <- function(adsl_sub) {
-  rows <- vector("list", nrow(adsl_sub))
-  rank <- c(CR=1, PR=2, SD=3, PD=4)
+rank_map <- c(CR=1, PR=2, SD=3, PD=4, NE=5)
 
-  for (i in seq_len(nrow(adsl_sub))) {
-    s <- adsl_sub[i, ]
-    uid <- s$USUBJID
-    tr <- adtr[adtr$USUBJID == uid, ]
-    bl <- tr[tr$AVISIT == "BASELINE", ]
-    post <- tr[tr$AVISIT != "BASELINE", ]
+best_resp <- function(uid) {
+  rs <- adrs[adrs$USUBJID == uid & adrs$PARAMCD == "OVRLRESP" &
+               adrs$AVALC %in% names(rank_map), ]
+  if (nrow(rs) == 0) return("NE")
+  rs$AVALC[which.min(rank_map[rs$AVALC])]
+}
 
-    ev <- nrow(bl) > 0 &&
-      !is.na(bl$AVAL[1]) &&
-      suppressWarnings(as.numeric(bl$AVAL[1])) > 0 &&
-      nrow(post) > 0
+best_pchg <- function(uid) {
+  post <- adtr[adtr$USUBJID == uid & adtr$AVISITN > 0, ]
+  vals <- suppressWarnings(as.numeric(post$PCHG))
+  vals <- vals[!is.na(vals)]
+  if (length(vals) == 0) return(0)
+  min(vals)
+}
 
-    pct <- 0
-    if (ev) {
-      pchg <- suppressWarnings(as.numeric(post$PCHG))
-      pchg <- pchg[!is.na(pchg)]
-      pct <- if (length(pchg)) min(pchg) else 0
-    }
+wf <- adsl[adsl$ARM == "TREATMENT", ] |>
+  rowwise() |>
+  mutate(
+    short = sub("^[^-]+-[^-]+-", "", USUBJID),
+    resp  = best_resp(USUBJID),
+    pct   = best_pchg(USUBJID),
+    lm    = trimws(LIVERMETS)
+  ) |>
+  ungroup()
 
-    rs <- adrs[adrs$USUBJID == uid & adrs$PARAMCD == "OVRLRESP", ]
-    resp <- "NE"
-    if (nrow(rs) > 0) {
-      found <- rs$AVALC[rs$AVALC %in% names(rank)]
-      if (length(found)) resp <- found[which.min(rank[found])]
-    }
+make_panel <- function(df_tumor, tumor_name, show_y = FALSE) {
+  df <- df_tumor |>
+    arrange(desc(pct)) |>
+    mutate(x = row_number())
 
-    rows[[i]] <- data.frame(
-      uid=uid,
-      arm=s$ARM,
-      tumor=s$TUMORTYPE,
-      pct=pct,
-      resp=resp,
-      ev=ev,
-      stringsAsFactors=FALSE
+  n    <- nrow(df)
+  n_cr <- sum(df$resp == "CR")
+  n_pr <- sum(df$resp == "PR")
+  orr  <- round((n_cr + n_pr) / n * 100)
+
+  ttl <- sprintf("%s  (N=%d)\nCR:%d  PR:%d  ORR:%d%%", tumor_name, n, n_cr, n_pr, orr)
+
+  p <- ggplot(df, aes(x = x, y = pct, fill = resp)) +
+    geom_col(width = 0.78, color = NA) +
+    geom_hline(yintercept = 0,     linewidth = 1.0, color = "black") +
+    geom_hline(yintercept = PD_TH, linewidth = 0.7, color = "#555555",
+               linetype = "dashed") +
+    geom_hline(yintercept = PR_TH, linewidth = 0.7, color = "#555555",
+               linetype = "dashed") +
+    scale_fill_manual(values = RESP_COLORS, name = "Best Response",
+                      labels = c(CR="Complete Response (CR)",
+                                 PR="Partial Response (PR)",
+                                 SD="Stable Disease (SD)",
+                                 PD="Progressive Disease (PD)")) +
+    scale_x_continuous(breaks = seq_len(n), labels = df$short,
+                       expand = c(0.02, 0)) +
+    scale_y_continuous(breaks = seq(-100, 140, 20),
+                       labels = function(x) paste0(x, "%"),
+                       limits = c(-118, 150)) +
+    labs(title = ttl, x = NULL,
+         y = if (show_y) "Best % Change\nfrom Baseline in SLD" else NULL) +
+    theme_classic(base_size = 9) +
+    theme(
+      plot.title        = element_text(face = "bold", size = 10.5,
+                                       hjust = 0.5, lineheight = 1.3,
+                                       margin = margin(b = 6)),
+      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                       size = 7, family = "mono"),
+      axis.text.y       = if (show_y) element_text(size = 9) else element_blank(),
+      axis.ticks.y      = if (show_y) element_line() else element_blank(),
+      axis.line.x       = element_blank(),
+      axis.line.y       = element_line(color = "black"),
+      panel.grid.major.y = element_line(color = "#e8e8e8", linewidth = 0.45),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.x = element_blank(),
+      legend.position   = "none",
+      plot.margin       = margin(4, 4, 2, 4)
     )
+
+  if (!show_y) p <- p + theme(axis.title.y = element_blank())
+
+  list(bar = p, df = df, n = n)
+}
+
+make_strip <- function(df_sorted, show_label = FALSE) {
+  df <- df_sorted |> mutate(x = row_number())
+  n  <- nrow(df)
+
+  p <- ggplot(df, aes(x = x, y = 1, fill = lm)) +
+    geom_col(width = 0.78, color = NA) +
+    scale_fill_manual(values = LM_COLORS,
+                      labels = c(Y = "Yes", N = "No"),
+                      name = "Liver mets") +
+    scale_x_continuous(breaks = seq_len(n), expand = c(0.02, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme_void() +
+    theme(
+      legend.position = "none",
+      plot.margin     = margin(0, 4, 0, 4)
+    )
+
+  if (show_label) {
+    p <- p + annotate("text", x = 0, y = 0.5,
+                      label = "Liver\nmets", hjust = 1.1,
+                      size = 3.0, fontface = "bold", color = "#333333")
   }
-
-  do.call(rbind, rows)
+  p
 }
 
-df_all <- build_df(adsl)
-df_trt <- df_all[df_all$arm == "TREATMENT", ]
+panels <- lapply(seq_along(TUMOR_ORDER), function(i) {
+  tumor <- TUMOR_ORDER[i]
+  sub   <- wf[wf$tumor == tumor, ]
+  make_panel(sub, tumor, show_y = (i == 1))
+})
 
-orr_vals <- function(sub) {
-  n <- nrow(sub)
-  norr <- sum(sub$resp %in% c("CR","PR"))
-  pct <- if (n) norr / n * 100 else 0
-  c(n=n, norr=norr, pct=pct)
-}
+bar_plots   <- lapply(panels, `[[`, "bar")
+strip_plots <- lapply(seq_along(panels), function(i) {
+  make_strip(panels[[i]]$df, show_label = (i == 1))
+})
 
-style_ax <- function(n_bars, ymin, ylim_bottom, ylim_top, tick_max, ylabel=TRUE) {
-  plot(
-    NA, NA,
-    xlim=c(-0.5, n_bars + 0.5),
-    ylim=c(ylim_bottom, ylim_top),
-    xaxt="n", yaxt="n", xlab="", ylab="", bty="n"
+combined_cols <- lapply(seq_along(TUMOR_ORDER), function(i) {
+  bar_plots[[i]] / strip_plots[[i]] +
+    plot_layout(heights = c(10, 0.8))
+})
+
+full_plot <- wrap_plots(combined_cols, nrow = 1) +
+  plot_annotation(
+    title = paste0(
+      "Waterfall Plot \u2014 Best % Change from Baseline in SLD",
+      " by Tumor Type  \u00b7  ONCVIZ-001  \u00b7  Treatment Arm"
+    ),
+    theme = theme(
+      plot.title = element_text(face = "bold", size = 13,
+                                hjust = 0.5,
+                                margin = margin(b = 18))
+    )
   )
-  ytk <- seq(floor(ymin / 20) * 20, tick_max, by=20)
-  axis(2, at=ytk, labels=paste0(ytk, "%"), las=1, cex.axis=0.9)
-  abline(h=ytk, col="#eeeeee", lwd=0.5)
-  axis(2, at=ytk, labels=FALSE, col="#444444", lwd=0.8)
-  if (ylabel) {
-    mtext("Best % Change from Baseline in SLD (%)", side=2, line=4.6, font=2, cex=1.0)
-  }
-}
 
-reflines <- function(n_bars, thr_labels=TRUE, fs=0.75) {
-  abline(h=0, col="#111111", lwd=1.5)
-  abline(h=PD_TH, col="#777777", lwd=1.0, lty=2)
-  abline(h=PR_TH, col="#777777", lwd=1.0, lty=2)
-  if (thr_labels) {
-    text(n_bars + 1.0, PD_TH + 1.8, "+20% PD", cex=fs, col="#666666", adj=c(0,0), font=3, xpd=NA)
-    text(n_bars + 1.0, PR_TH - 1.8, "\u221230% PR", cex=fs, col="#666666", adj=c(0,1), font=3, xpd=NA)
-  }
-}
+legend_resp <- ggplot(data.frame(resp = names(RESP_COLORS)[1:4]),
+                      aes(x = resp, fill = resp)) +
+  geom_col(aes(y = 1)) +
+  scale_fill_manual(
+    values = RESP_COLORS[1:4],
+    labels = c(CR="Complete Response (CR)", PR="Partial Response (PR)",
+               SD="Stable Disease (SD)",   PD="Progressive Disease (PD)"),
+    name = NULL
+  ) +
+  guides(fill = guide_legend(nrow = 1, override.aes = list(size = 4))) +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.text     = element_text(size = 9),
+        legend.key.size = unit(0.45, "cm"))
 
-draw_bars <- function(sub, xp, bw, color_by="resp") {
-  for (i in seq_len(nrow(sub))) {
-    row <- sub[i, ]
-    col <- if (color_by == "resp") RESP_COLORS[row$resp] else TUMOR_COLORS[row$tumor]
-    if (is.na(col)) col <- "#888888"
-    rect(xp[i] - bw / 2, min(0, row$pct), xp[i] + bw / 2, max(0, row$pct), col=col, border=NA)
-  }
-}
+legend_lm <- ggplot(data.frame(lm = c("Y","N")), aes(x = lm, fill = lm)) +
+  geom_col(aes(y = 1)) +
+  scale_fill_manual(
+    values = LM_COLORS,
+    labels = c(Y="Liver mets: Yes", N="Liver mets: No"),
+    name = NULL
+  ) +
+  guides(fill = guide_legend(nrow = 1, override.aes = list(size = 4))) +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.text     = element_text(size = 9),
+        legend.key.size = unit(0.45, "cm"))
 
-tumor_strip <- function(sub, xp, bw, label=TRUE) {
-  n <- nrow(sub)
-  plot(NA, NA, xlim=c(-0.5, n + 0.5), ylim=c(0,1), xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
-  for (i in seq_len(n)) {
-    col <- TUMOR_COLORS[sub$tumor[i]]
-    if (is.na(col)) col <- "#888888"
-    rect(xp[i] - bw / 2, 0.05, xp[i] + bw / 2, 0.95, col=col, border=NA)
-  }
-  if (label) {
-    text(-0.8, 0.5, "Tumor\ntype", adj=c(1,0.5), cex=0.75, font=2, col="#444444", xpd=NA)
-  }
-}
-
-panel_header <- function(tumor, stats_txt) {
-  usr <- par("usr")
-  x <- usr[1]
-  y_rng <- diff(usr[3:4])
-  text(x, usr[4] + 0.075 * y_rng, tumor, adj=c(0,0), cex=1.15, font=2, col=TUMOR_COLORS[tumor], xpd=NA)
-  text(
-    x, usr[4] + 0.015 * y_rng, stats_txt,
-    adj=c(0,0), cex=0.50, font=2, col="#333333", xpd=NA,
-    bg="#f7f7f7"
-  )
-}
-
-cat("Data loaded. Building plots...\n")
-
-png(out("waterfall_5panel.png"), width=26, height=13, units="in", res=DPI, bg="white")
-layout(
-  matrix(c(1,2,3,4,5,6,
-           7,8,9,10,11,12), nrow=2, byrow=TRUE),
-  widths=c(1,1,1,1,1,0.72),
-  heights=c(8.5,0.65)
+leg_grob <- gridExtra::arrangeGrob(
+  get_legend <- function(p) {
+    tmp <- ggplotGrob(p)
+    leg <- tmp$grobs[[which(sapply(tmp$grobs, function(x) x$name) == "guide-box")]]
+    leg
+  },
+  get_legend(legend_resp),
+  get_legend(legend_lm),
+  nrow = 1
 )
-par(oma=c(0.5,4.8,5.8,0.5), mar=c(0.4,0.4,1.5,0.4), xaxs="i", yaxs="i")
+
+get_legend <- function(p) {
+  g <- ggplotGrob(p)
+  g$grobs[[which(sapply(g$grobs, function(x) x$name) == "guide-box")]]
+}
+leg_combined <- gridExtra::arrangeGrob(
+  get_legend(legend_resp), get_legend(legend_lm),
+  nrow = 1, widths = c(4, 1.5)
+)
+
+png(file.path(OUTPUT_DIR, "waterfall_5panel.png"),
+    width = 28, height = 11, units = "in", res = 150)
+gridExtra::grid.arrange(
+  ggplotGrob(full_plot),
+  leg_combined,
+  nrow   = 2,
+  heights = c(10.3, 0.7)
+)
+dev.off()
+
+make_waterfall_single <- function(df_in, title_str, fname) {
+  df <- df_in |>
+    arrange(desc(pct)) |>
+    mutate(x = row_number())
+
+  n    <- nrow(df)
+  n_cr <- sum(df$resp == "CR"); n_pr <- sum(df$resp == "PR")
+  n_sd <- sum(df$resp == "SD"); n_pd <- sum(df$resp == "PD")
+  orr  <- round((n_cr + n_pr) / n * 100)
+  stats_lbl <- sprintf("N=%d   CR:%d  PR:%d  SD:%d  PD:%d   ORR=%d%%",
+                       n, n_cr, n_pr, n_sd, n_pd, orr)
+
+  bar_p <- ggplot(df, aes(x = x, y = pct, fill = resp)) +
+    geom_col(width = 0.78, color = NA) +
+    geom_hline(yintercept = 0,     linewidth = 1.2, color = "black") +
+    geom_hline(yintercept = PD_TH, linewidth = 0.8, color = "#444444",
+               linetype = "dashed") +
+    geom_hline(yintercept = PR_TH, linewidth = 0.8, color = "#444444",
+               linetype = "dashed") +
+    annotate("text", x = n + 0.7, y = PD_TH + 2,
+             label = "+20%: PD threshold", hjust = 0, vjust = 0,
+             size = 3.2, fontface = "italic", color = "#444444") +
+    annotate("text", x = n + 0.7, y = PR_TH - 2,
+             label = "-30%: PR threshold", hjust = 0, vjust = 1,
+             size = 3.2, fontface = "italic", color = "#444444") +
+    scale_fill_manual(
+      values = RESP_COLORS,
+      labels = c(CR="Complete Response (CR)", PR="Partial Response (PR)",
+                 SD="Stable Disease (SD)",    PD="Progressive Disease (PD)"),
+      name = "Best Response"
+    ) +
+    scale_x_continuous(breaks = seq_len(n), labels = df$short,
+                       expand = c(0.01, 0)) +
+    scale_y_continuous(breaks = seq(-100, 140, 20),
+                       labels = function(x) paste0(x, "%"),
+                       limits = c(-118, 155)) +
+    labs(title = paste0(title_str, "\n", stats_lbl),
+         x = NULL,
+         y = "Best % Change from Baseline in SLD") +
+    theme_classic(base_size = 10) +
+    theme(
+      plot.title         = element_text(face="bold", size=12,
+                                        hjust=0.5, lineheight=1.3,
+                                        margin=margin(b=8)),
+      axis.text.x        = element_text(angle=90, vjust=0.5, hjust=1,
+                                        size=8, family="mono"),
+      axis.text.y        = element_text(size=10),
+      panel.grid.major.y = element_line(color="#e8e8e8", linewidth=0.5),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.x = element_blank(),
+      legend.position    = "inside",
+      legend.position.inside = c(0.98, 0.98),
+      legend.justification   = c(1, 1),
+      legend.background  = element_rect(fill="white", color="#aaaaaa",
+                                        linewidth=0.5),
+      legend.text        = element_text(size=9),
+      legend.title       = element_text(size=9, face="bold"),
+      legend.key.size    = unit(0.45, "cm"),
+      plot.margin        = margin(6, 6, 2, 6)
+    )
+
+  strip_p <- ggplot(df |> mutate(x = row_number()),
+                    aes(x = x, y = 1, fill = lm)) +
+    geom_col(width = 0.78, color = NA) +
+    scale_fill_manual(values  = LM_COLORS,
+                      labels  = c(Y="Yes", N="No"),
+                      name    = "Liver mets") +
+    scale_x_continuous(expand = c(0.01, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    annotate("text", x = 0, y = 0.5,
+             label = "Liver mets", hjust = 1.05, size = 3.2,
+             fontface = "bold", color = "#333333") +
+    theme_void() +
+    theme(
+      legend.position = "none",
+      plot.margin     = margin(0, 6, 0, 6)
+    )
+
+  lm_leg_p <- ggplot(data.frame(lm = c("Y","N")), aes(x=lm, fill=lm)) +
+    geom_col(aes(y=1)) +
+    scale_fill_manual(values=LM_COLORS,
+                      labels=c(Y="Yes", N="No"), name="Liver mets") +
+    guides(fill=guide_legend(nrow=1, override.aes=list(size=3.5))) +
+    theme_void() +
+    theme(legend.position="bottom",
+          legend.text=element_text(size=9),
+          legend.key.size=unit(0.42,"cm"))
+
+  lm_leg_grob <- get_legend(lm_leg_p)
+
+  full <- bar_p / strip_p + plot_layout(heights = c(10, 0.75))
+
+  png(fname, width=16, height=9, units="in", res=150)
+  gridExtra::grid.arrange(
+    ggplotGrob(full),
+    lm_leg_grob,
+    nrow=2, heights=c(9.3, 0.7)
+  )
+  dev.off()
+  message("  Saved: ", basename(fname))
+}
+
+make_waterfall_single(wf,
+  "Waterfall Plot \u2014 Best % Change from Baseline  \u00b7  ONCVIZ-001  \u00b7  Treatment Arm",
+  file.path(OUTPUT_DIR, "waterfall_all_treatment.png"))
 
 for (tumor in TUMOR_ORDER) {
-  sub <- df_trt[df_trt$tumor == tumor, ]
-  sub <- sub[order(sub$pct, decreasing=TRUE), ]
-  rownames(sub) <- NULL
-  n <- nrow(sub)
-  bw <- max(0.55, min(0.85, 38 / n))
-  xp <- seq_len(n) - 0.5
-
-  style_ax(n, ymin=-110, ylim_bottom=-116, ylim_top=130, tick_max=60, ylabel=(tumor == TUMOR_ORDER[1]))
-  reflines(n, thr_labels=(tumor == tail(TUMOR_ORDER, 1)), fs=0.62)
-  draw_bars(sub, xp, bw, color_by="resp")
-
-  vals <- orr_vals(sub)
-  rc <- table(factor(sub$resp, levels=c("CR","PR","SD","PD")))
-  stats_txt <- sprintf(
-    "N = %d   CR: %d  PR: %d  SD: %d  PD: %d   ORR = %.0f%%",
-    vals["n"], rc["CR"], rc["PR"], rc["SD"], rc["PD"], vals["pct"]
-  )
-  panel_header(tumor, stats_txt)
+  sub <- wf[wf$tumor == tumor, ]
+  make_waterfall_single(sub,
+    sprintf("Waterfall Plot \u2014 Best %% Change from Baseline  \u00b7  ONCVIZ-001  \u00b7  %s  \u00b7  Treatment Arm", tumor),
+    file.path(OUTPUT_DIR, sprintf("waterfall_%s.png", tolower(tumor))))
 }
 
-par(mar=c(0.4,0.1,1.5,0.1))
-plot.new()
-legend(
-  "left",
-  inset=c(0.02, 0.18),
-  legend=c("Complete Response (CR)", "Partial Response (PR)", "Stable Disease (SD)", "Progressive Disease (PD)"),
-  fill=RESP_COLORS[c("CR","PR","SD","PD")],
-  border="#555555",
-  title="Best Overall\nResponse",
-  cex=0.82,
-  bty="o",
-  box.col="#aaaaaa",
-  xpd=NA
-)
-
-par(mar=c(0.05,0.4,0.05,0.4))
-for (tumor in TUMOR_ORDER) {
-  sub <- df_trt[df_trt$tumor == tumor, ]
-  sub <- sub[order(sub$pct, decreasing=TRUE), ]
-  rownames(sub) <- NULL
-  n <- nrow(sub)
-  bw <- max(0.55, min(0.85, 38 / n))
-  xp <- seq_len(n) - 0.5
-  tumor_strip(sub, xp, bw, label=(tumor == TUMOR_ORDER[1]))
-}
-plot.new()
-
-mtext("Waterfall Plot \u2014 Best Overall Response by Histology   \u00b7   ONCVIZ-001  \u00b7  Treatment Arm",
-      outer=TRUE, side=3, line=3.2, cex=1.15, font=2)
-mtext(paste0("RECIST 1.1  \u00b7  Best % change from baseline in sum of longest diameters  \u00b7  ", CUTOFF),
-      outer=TRUE, side=3, line=1.8, cex=0.85, font=3, col="#555555")
-dev.off()
-cat("\u2713 waterfall_5panel.png\n")
-
-df_s <- df_trt[order(df_trt$pct, decreasing=TRUE), ]
-rownames(df_s) <- NULL
-N2 <- nrow(df_s)
-bw2 <- 0.72
-xp2 <- seq_len(N2) - 0.5
-
-png(out("waterfall_treatment_arm.png"), width=30, height=13, units="in", res=DPI, bg="white")
-layout(matrix(c(1,2,3,4), nrow=2, byrow=TRUE), widths=c(1,0.13), heights=c(8,0.65))
-par(oma=c(0.5,4.8,5.8,0.5), mar=c(0.4,0.4,1.5,0.4), xaxs="i", yaxs="i")
-
-style_ax(N2, ymin=-110, ylim_bottom=-116, ylim_top=80, tick_max=60, ylabel=TRUE)
-reflines(N2, thr_labels=FALSE)
-text(N2 + 1.5, PD_TH + 1.8, "+20% PD", cex=0.85, col="#666666", adj=c(0,0), font=3, xpd=NA)
-text(N2 + 1.5, PR_TH - 1.8, "\u221230% PR", cex=0.85, col="#666666", adj=c(0,1), font=3, xpd=NA)
-draw_bars(df_s, xp2, bw2, color_by="resp")
-vals2 <- orr_vals(df_s)
-legend(
-  "topleft",
-  legend=sprintf("N = %d   ORR = %d/%d (%.0f%%)", vals2["n"], vals2["norr"], vals2["n"], vals2["pct"]),
-  bty="o",
-  box.col="#999999",
-  bg="white",
-  text.font=2,
-  cex=0.95
-)
-
-plot.new()
-rc2 <- table(factor(df_s$resp, levels=c("CR","PR","SD","PD")))
-legend(
-  "topright",
-  inset=c(0.0, 0.20),
-  legend=sprintf("%s   n = %d", names(rc2), as.integer(rc2)),
-  fill=RESP_COLORS[names(rc2)],
-  border="#555555",
-  title="Response",
-  cex=0.85,
-  bty="o",
-  box.col="#aaaaaa"
-)
-legend(
-  "bottomright",
-  inset=c(0.0, 0.16),
-  legend=TUMOR_ORDER,
-  fill=TUMOR_COLORS[TUMOR_ORDER],
-  border=NA,
-  title="Tumor Type",
-  cex=0.85,
-  bty="o",
-  box.col="#aaaaaa"
-)
-
-par(mar=c(0.05,0.4,0.05,0.4))
-tumor_strip(df_s, xp2, bw2, label=TRUE)
-plot.new()
-
-mtext(sprintf("Waterfall Plot \u2014 Treatment Arm   \u00b7   ONCVIZ-001   (N = %d)", N2),
-      outer=TRUE, side=3, line=3.2, cex=1.2, font=2)
-mtext(paste0("RECIST 1.1  \u00b7  Best % change from baseline in SLD  \u00b7  ", CUTOFF),
-      outer=TRUE, side=3, line=1.7, cex=0.9, font=3, col="#555555")
-dev.off()
-cat("\u2713 waterfall_treatment_arm.png\n")
-
-df_a <- df_all[order(df_all$arm, -df_all$pct), ]
-rownames(df_a) <- NULL
-NA_all <- nrow(df_a)
-bw3 <- 0.68
-xp3 <- seq_len(NA_all) - 0.5
-n_ctrl <- sum(df_a$arm == "CONTROL")
-sep_x <- n_ctrl + 0.5
-
-png(out("waterfall_all_patients.png"), width=38, height=16, units="in", res=DPI, bg="white")
-layout(matrix(c(1,2,3,4), nrow=2, byrow=TRUE), widths=c(1,0.10), heights=c(8,0.65))
-par(oma=c(0.5,4.8,5.8,0.5), mar=c(0.4,0.4,1.5,0.4), xaxs="i", yaxs="i")
-
-style_ax(NA_all, ymin=-110, ylim_bottom=-116, ylim_top=80, tick_max=60, ylabel=TRUE)
-reflines(NA_all, thr_labels=FALSE)
-text(NA_all + 1.2, PD_TH + 1.8, "+20% PD", cex=0.85, col="#666666", adj=c(0,0), font=3, xpd=NA)
-text(NA_all + 1.2, PR_TH - 1.8, "\u221230% PR", cex=0.85, col="#666666", adj=c(0,1), font=3, xpd=NA)
-draw_bars(df_a, xp3, bw3, color_by="resp")
-abline(v=sep_x, col="#444444", lwd=1.4, lty=3)
-text(sep_x / 2, -11, sprintf("Control  (n = %d)", n_ctrl), adj=c(0.5,1), cex=0.9, font=2, col="#444444")
-text((sep_x + NA_all) / 2, -11, sprintf("Treatment  (n = %d)", NA_all - n_ctrl), adj=c(0.5,1), cex=0.9, font=2, col="#444444")
-
-vals_ctl <- orr_vals(df_a[df_a$arm == "CONTROL", ])
-vals_trt <- orr_vals(df_a[df_a$arm == "TREATMENT", ])
-legend(sep_x / 2, 80, legend=sprintf("ORR = %.0f%%", vals_ctl["pct"]), bty="o", box.col="#999999", bg="white", text.font=2, cex=0.85, xjust=0.5, yjust=1)
-legend((sep_x + NA_all) / 2, 80, legend=sprintf("ORR = %.0f%%", vals_trt["pct"]), bty="o", box.col="#999999", bg="white", text.font=2, cex=0.85, xjust=0.5, yjust=1)
-
-plot.new()
-rc3 <- table(factor(df_a$resp, levels=c("CR","PR","SD","PD")))
-legend(
-  "topright",
-  inset=c(0.0, 0.20),
-  legend=sprintf("%s   n = %d", names(rc3), as.integer(rc3)),
-  fill=RESP_COLORS[names(rc3)],
-  border="#555555",
-  title="Response",
-  cex=0.85,
-  bty="o",
-  box.col="#aaaaaa"
-)
-legend(
-  "bottomright",
-  inset=c(0.0, 0.16),
-  legend=TUMOR_ORDER,
-  fill=TUMOR_COLORS[TUMOR_ORDER],
-  border=NA,
-  title="Tumor Type",
-  cex=0.85,
-  bty="o",
-  box.col="#aaaaaa"
-)
-
-par(mar=c(0.05,0.4,0.05,0.4))
-tumor_strip(df_a, xp3, bw3, label=TRUE)
-plot.new()
-
-mtext(sprintf("Waterfall Plot \u2014 All Patients   \u00b7   ONCVIZ-001   (N = %d)", NA_all),
-      outer=TRUE, side=3, line=3.2, cex=1.2, font=2)
-mtext(paste0("RECIST 1.1  \u00b7  Best % change from baseline in SLD  \u00b7  ", CUTOFF),
-      outer=TRUE, side=3, line=1.7, cex=0.9, font=3, col="#555555")
-dev.off()
-cat("\n\u2713 All 3 waterfall plots complete.\n")
+message("All waterfall plots saved to: ", OUTPUT_DIR)
