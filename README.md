@@ -36,7 +36,7 @@ The central question of any oncology efficacy trial is whether the treatment wor
 | Spider Plot | ADTR | ✅ Implemented |
 | Swimmer Plot | ADSL, ADRS, ADTR | ✅ Implemented |
 | Best Overall Response (BOR) Plot | ADRS | ✅ Implemented |
-| Tumor Burden Plot | ADTR | 🔄 In progress |
+| Tumor Burden Plot | ADTR | ✅ Implemented |
 
 ---
 
