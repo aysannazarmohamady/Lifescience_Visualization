@@ -18,7 +18,7 @@ The goal is not a visualization gallery. It is a rigorous reference implementati
 
 > **Current version:** Active development, Phase I (Oncology)
 >
-> The shared ADaM synthetic dataset (`Data/`) is complete and fully validated across 13 domains and 131,690 records. Visualization modules are being implemented progressively against this unified dataset. See the table below for current implementation status.
+> The shared ADaM synthetic dataset (`Data/`) is complete and fully validated across 13 domains and 26,723 records. Visualization modules are being implemented progressively against this unified dataset. See the table below for current implementation status.
 
 ---
 
@@ -208,26 +208,26 @@ Population-level cancer epidemiology visualizations require registry-level datas
 
 ## Synthetic Dataset: ONCVIZ-001
 
-All visualizations in domains 01–11 are demonstrated on a single shared synthetic ADaM dataset — **ONCVIZ-001** — simulating a Phase II/III open-label randomized basket trial of a fictional oral kinase inhibitor (Vizatinib 300 mg QD) across five solid tumor histologies (NSCLC, CRC, HCC, PDAC, BRCA) at 20 investigational sites. The dataset comprises 400 virtual patients enrolled over 18 months with a data cutoff of March 5, 2026.
+All visualizations in domains 01–11 are demonstrated on a single shared synthetic ADaM dataset — **ONCVIZ-001** — simulating a Phase I/II open-label dose-escalation and randomized basket trial of a fictional oral kinase inhibitor (Vizatinib 300 mg QD) across five solid tumor histologies (NSCLC, CRC, HCC, PDAC, BRCA). The dataset comprises 80 virtual patients (Phase I: 20 treatment-only; Phase II: 40 treatment + 20 control, 2:1 ratio) with a data cutoff of March 5, 2026.
 
-Each histology carries independently calibrated response rates, survival parameters, mutation prevalences, toxicity profiles, and mutational signatures, enabling biologically valid per-tumor subgroup analyses. Generation parameters were anchored to empirical distributions from cBioPortal (n = 2,153 pooled NSCLC patients) and to published trial benchmarks from KEYNOTE-189 (Gandhi et al., *N Engl J Med* 2018), IMbrave150 (Finn et al., *N Engl J Med* 2020), OlympiAD (Robson et al., *N Engl J Med* 2017), the TCGA PanCancer Atlas, COSMIC v3.3, and the erlotinib population PK model (Ling et al., *J Clin Pharmacol* 2006). All outputs are exactly reproducible from `seed = 42`.
+Each histology carries independently calibrated response rates, survival parameters, mutation prevalences, toxicity profiles, and mutational signatures, enabling biologically valid per-tumor subgroup analyses. Generation parameters were anchored to empirical distributions from cBioPortal and to published trial benchmarks from KEYNOTE-189 (Gandhi et al., *N Engl J Med* 2018), IMbrave150 (Finn et al., *N Engl J Med* 2020), OlympiAD (Robson et al., *N Engl J Med* 2017), the TCGA PanCancer Atlas, COSMIC v3.3, and the erlotinib population PK model (Ling et al., *J Clin Pharmacol* 2006). All outputs are exactly reproducible from `seed = 42`.
 
 | Domain | File | Records | Description |
 |---|---|---|---|
-| ADSL | `Data/ADSL.csv` | 400 | Subject-level: demographics, treatment arm, survival outcomes, biomarker and mutation status |
-| ADRS | `Data/ADRS.csv` | 1,211 | RECIST 1.1 response assessments per visit, Markov-chain trajectories |
-| ADTR | `Data/ADTR.csv` | 6,539 | Sum of longest diameters (SLD) over time |
-| ADAE | `Data/ADAE.csv` | 5,213 | Adverse events with MedDRA coding, CTCAE v5 grading, histology-specific incidence |
-| ADLB | `Data/ADLB.csv` | 53,298 | Laboratory parameters (21 tests, 8 visits, CTCAE grading for all applicable parameters) |
-| ADTTE | `Data/ADTTE.csv` | 970 | Time-to-event: OS, PFS, DOR, TTR with 15 subgroup variables and landmark flags |
-| ADPK | `Data/ADPK.csv` | 8,942 | Plasma PK profiles (1-compartment model, treatment arm only) |
-| ADEX | `Data/ADEX.csv` | 12,484 | Dose exposure and cycle-level modifications including re-escalation records |
-| ADBM | `Data/ADBM.csv` | 17,724 | Longitudinal biomarkers and immune cell panel |
-| ADPR | `Data/ADPR.csv` | 21,697 | Patient-reported outcomes (EORTC QLQ-C30, 11 scales) |
-| ADMUT | `Data/ADMUT.csv` | 753 | Somatic mutation calls (15 cancer genes, tumor-stratified prevalence) |
-| ADRAND | `Data/ADRAND.csv` | 459 | Screening and randomization log (459 screened, 59 screen failures, 400 randomized) |
-| ADSIG | `Data/ADSIG.csv` | 2,000 | Mutational signatures (SBS, COSMIC v3.3, 5 signatures per patient) |
-| **Total** | | **131,690** | |
+| ADSL | `Data/ADSL.csv` | 80 | Subject-level: demographics, treatment arm, survival outcomes, biomarker and mutation status |
+| ADRS | `Data/ADRS.csv` | 769 | RECIST 1.1 response assessments per visit, Markov-chain trajectories |
+| ADTR | `Data/ADTR.csv` | 769 | Sum of longest diameters (SLD) over time |
+| ADAE | `Data/ADAE.csv` | 752 | Adverse events with MedDRA coding, CTCAE v5 grading, histology-specific incidence |
+| ADLB | `Data/ADLB.csv` | 11,880 | Laboratory parameters (20 tests incl. immune cell panel, CTCAE grading for all applicable parameters) |
+| ADTTE | `Data/ADTTE.csv` | 377 | Time-to-event: OS, PFS, EFS, TTP, DOR, TTR, DFS with 15 subgroup variables and landmark flags |
+| ADPK | `Data/ADPK.csv` | 1,984 | Plasma PK profiles (1-compartment model, treatment arm only) |
+| ADEX | `Data/ADEX.csv` | 2,361 | Dose exposure and cycle-level modifications including re-escalation records |
+| ADBM | `Data/ADBM.csv` | 3,321 | Longitudinal biomarkers and immune cell panel |
+| ADPR | `Data/ADPR.csv` | 3,888 | Patient-reported outcomes (EORTC QLQ-C30, 8 scales) |
+| ADMUT | `Data/ADMUT.csv` | 187 | Somatic mutation calls (15 cancer genes, tumor-stratified prevalence) |
+| ADRAND | `Data/ADRAND.csv` | 92 | Screening and randomization log (92 screened, 12 screen failures, 80 randomized) |
+| ADSIG | `Data/ADSIG.csv` | 263 | Mutational signatures (SBS, COSMIC v3.3, 12 unique SBS signatures) |
+| **Total** | | **26,723** | |
 
 For complete dataset documentation including calibration methodology, domain architecture, internal consistency validation, and full reference list, see [`Data/README.md`](Data/README.md).
 
@@ -245,7 +245,7 @@ Lifescience_Visualization/
 │   ├── ADPK.csv   ADEX.csv   ADBM.csv
 │   ├── ADPR.csv   ADMUT.csv
 │   ├── ADRAND.csv ADSIG.csv
-│   ├── generate_adam_oncviz.R
+│   ├── generate_adam_oncviz001.R
 │   └── README.md                     ← Full dataset methodology and validation
 │
 └── oncology/
