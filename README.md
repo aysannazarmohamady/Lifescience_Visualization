@@ -46,11 +46,11 @@ Most Phase III oncology trials are powered to detect a survival endpoint. The Ka
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Kaplan-Meier Curve | ADTTE | 🔜 Planned |
-| Overall Survival (OS) Curve | ADTTE | 🔜 Planned |
-| Progression-Free Survival (PFS) Curve | ADTTE | 🔜 Planned |
-| Event-Free Survival (EFS) Curve | ADTTE | 🔜 Planned |
-| Disease-Free Survival (DFS) Curve | ADTTE | 🔜 Planned |
+| Kaplan-Meier Curve | ADTTE | ✅ Implemented |
+| Overall Survival (OS) Curve | ADTTE | ✅ Implemented |
+| Progression-Free Survival (PFS) Curve | ADTTE | ✅ Implemented |
+| Event-Free Survival (EFS) Curve | ADTTE | ✅ Implemented |
+| Disease-Free Survival (DFS) Curve | ADTTE | ✅ Implemented |
 | Time to Response (TTR) Plot | ADTTE | 🔜 Planned |
 | Time to Progression (TTP) Plot | ADTTE | 🔜 Planned |
 | Duration of Response (DOR) Plot | ADTTE | 🔜 Planned |
