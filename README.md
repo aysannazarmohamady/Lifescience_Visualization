@@ -51,12 +51,12 @@ Most Phase III oncology trials are powered to detect a survival endpoint. The Ka
 | Progression-Free Survival (PFS) Curve | ADTTE | ✅ Implemented |
 | Event-Free Survival (EFS) Curve | ADTTE | ✅ Implemented |
 | Disease-Free Survival (DFS) Curve | ADTTE | ✅ Implemented |
-| Time to Response (TTR) Plot | ADTTE | 🔜 Planned |
-| Time to Progression (TTP) Plot | ADTTE | 🔜 Planned |
-| Duration of Response (DOR) Plot | ADTTE | 🔜 Planned |
-| Landmark Analysis Plot | ADTTE | 🔜 Planned |
-| Competing Risks Curve (Cumulative Incidence) | ADTTE | 🔜 Planned |
-| Restricted Mean Survival Time (RMST) Plot | ADTTE | 🔜 Planned |
+| Time to Response (TTR) Plot | ADTTE | ✅ Implemented |
+| Time to Progression (TTP) Plot | ADTTE | ✅ Implemented |
+| Duration of Response (DOR) Plot | ADTTE | ✅ Implemented|
+| Landmark Analysis Plot | ADTTE | ✅ Implemented |
+| Competing Risks Curve (Cumulative Incidence) | ADTTE | ✅ Implemented|
+| Restricted Mean Survival Time (RMST) Plot | ADTTE | ✅ Implemented |
 
 ---
 
