@@ -1,4 +1,4 @@
-# Plot 5 — Immune Cell Infiltration Heatmap
+# Immune Cell Infiltration Heatmap
 
 A tumor type × immune cell type z-score heatmap of mean immune infiltration levels (log₂ relative to cross-tumor mean), computed from ADBM baseline biomarker values joined to ADSL tumor histology, across five solid tumor types in the ONCVIZ-001 basket trial dataset.
 
