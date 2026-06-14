@@ -1,4 +1,4 @@
-# Plot 3 — t-SNE Single-Cell Immune Landscape
+# t-SNE Single-Cell Immune Landscape
 
 A t-SNE dimensionality reduction of the same 2,800-cell × 7-marker matrix used in Plot 2, providing an orthogonal single-cell view for cross-validation of cluster structure against UMAP, anchored on patient ADBM baseline distributions from the ONCVIZ-001 basket trial dataset.
 
