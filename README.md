@@ -90,8 +90,8 @@ Single-cell and flow cytometry-based visualizations represent a methodologically
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Flow Cytometry Plot (Scatter / Gating) | External (GEO) | 🔜 Planned |
-| UMAP Plot | External (GEO / HCA) | 🔜 Planned |
+| Flow Cytometry Plot (Scatter / Gating) | External (GEO) | ✅ Implemented |
+| UMAP Plot | External (GEO / HCA) | ✅ Implemented |
 | t-SNE Plot | External (GEO / HCA) | 🔜 Planned |
 | Cell Composition Bar Plot | ADBM | 🔜 Planned |
 | Immune Cell Infiltration Heatmap | ADBM | 🔜 Planned |
