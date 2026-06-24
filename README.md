@@ -66,21 +66,21 @@ Genomic and molecular biomarker visualizations span a wide methodological range,
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Lollipop Plot (Mutation) | ADMUT | 🔜 Planned |
-| OncoPrint / Oncoprint Heatmap | ADMUT, ADSL | 🔜 Planned |
-| Volcano Plot | ADBM | 🔜 Planned |
-| Forest Plot (Subgroup Analysis) | ADTTE, ADSL | 🔜 Planned |
-| Mutation Landscape Plot | ADMUT | 🔜 Planned |
-| Copy Number Variation (CNV) Plot | External (TCGA) | 🔜 Planned |
-| Circos Plot | External (TCGA) | 🔜 Planned |
-| Manhattan Plot | External (TCGA) | 🔜 Planned |
-| Miami Plot | External (TCGA) | 🔜 Planned |
-| Rainfall Plot | ADMUT | 🔜 Planned |
-| Mutational Signature Plot | ADSIG | 🔜 Planned |
-| VAF (Variant Allele Frequency) Plot | ADMUT | 🔜 Planned |
-| ctDNA Dynamics Plot | ADBM | 🔜 Planned |
-| TMB (Tumor Mutational Burden) Plot | ADSL, ADMUT | 🔜 Planned |
-| MSI (Microsatellite Instability) Plot | ADSL | 🔜 Planned |
+| Lollipop Plot (Mutation) | ADMUT | ✅ Implemented |
+| OncoPrint / Oncoprint Heatmap | ADMUT, ADSL | ✅ Implemented |
+| Volcano Plot | ADBM | ✅ Implemented |
+| Forest Plot (Subgroup Analysis) | ADTTE, ADSL | ✅ Implemented |
+| Mutation Landscape Plot | ADMUT | ✅ Implemented |
+| Copy Number Variation (CNV) Plot | External (TCGA) | ✅ Implemented |
+| Circos Plot | External (TCGA) | ✅ Implemented |
+| Manhattan Plot | External (TCGA) | ✅ Implemented |
+| Miami Plot | External (TCGA) | ✅ Implemented |
+| Rainfall Plot | ADMUT | ✅ Implemented |
+| Mutational Signature Plot | ADSIG | ✅ Implemented |
+| VAF (Variant Allele Frequency) Plot | ADMUT | ✅ Implemented |
+| ctDNA Dynamics Plot | ADBM | ✅ Implemented |
+| TMB (Tumor Mutational Burden) Plot | ADSL, ADMUT | ✅ Implemented |
+| MSI (Microsatellite Instability) Plot | ADSL | ✅ Implemented |
 
 ---
 
