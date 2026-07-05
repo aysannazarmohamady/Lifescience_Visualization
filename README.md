@@ -92,10 +92,10 @@ Single-cell and flow cytometry-based visualizations represent a methodologically
 |---|---|---|
 | Flow Cytometry Plot (Scatter / Gating) | External (GEO) | ✅ Implemented |
 | UMAP Plot | External (GEO / HCA) | ✅ Implemented |
-| t-SNE Plot | External (GEO / HCA) | 🔜 Planned |
-| Cell Composition Bar Plot | ADBM | 🔜 Planned |
-| Immune Cell Infiltration Heatmap | ADBM | 🔜 Planned |
-| CyTOF Dot Plot | External (GEO) | 🔜 Planned |
+| t-SNE Plot | External (GEO / HCA) | ✅ Implemented |
+| Cell Composition Bar Plot | ADBM | ✅ Implemented |
+| Immune Cell Infiltration Heatmap | ADBM | ✅ Implemented |
+| CyTOF Dot Plot | External (GEO) | ✅ Implemented |
 
 ---
 
@@ -249,19 +249,20 @@ Lifescience_Visualization/
 │   └── README.md                     ← Full dataset methodology and validation
 │
 └── oncology/
-    ├── 01_Response_Assessment/
-    │   ├── Waterfall_Plot/
-    │   ├── Spider_Plot/
-    │   ├── Swimmer_Plot/
-    │   ├── BOR_Plot/
-    │   └── Tumor_Burden_Plot/
-    ├── 02_Survival_Time_to_Event/     ← 11 plot types
-    ├── 03_Biomarker_Genomics/         ← 15 plot types
-    ├── 04_Immunology_Cellular/        ← 6 plot types
+    ├── Response_Assessment/           ← 5 plot types
+    │   ├── Bor_plot/
+    │   ├── Spider_plot/
+    │   ├── swimmer_plot/
+    │   ├── Tumor_Burden_plot/
+    │   └── Waterfall_plot/
+    ├── Survival_TimeToEvent/          ← 11 plot types
+    ├── Biomarker_Genomics/            ← 15 plot types
+    ├── Immunology_Cellular/           ← 6 plot types
+    ├── Meta_Analysis/                 ← Forest Plot (subgroup/meta)
+    ├── Uncategorized/                 ← Heatmap_plot, Stackedbar_plot (pending re-classification)
     ├── 05_Safety_Toxicity/            ← 6 plot types
     ├── 06_PK_PD/                      ← 5 plot types
     ├── 07_Imaging_Tumor_Measurement/  ← 3 plot types
-    ├── 08_Meta_Analysis_Comparison/   ← 5 plot types
     ├── 09_Trial_Design_Patient_Flow/  ← 5 plot types
     ├── 10_Cell_Therapy_CART/          ← 3 plot types
     ├── 11_Radiomics_Imaging/          ← 3 plot types
