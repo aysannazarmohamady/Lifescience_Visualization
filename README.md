@@ -120,11 +120,11 @@ PK/PD visualizations underpin dose selection, exposure-response characterization
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| PK Concentration-Time Curve | ADPK | 🔜 Planned |
-| Trough Level Plot | ADPK | 🔜 Planned |
-| PD Biomarker Plot | ADBM, ADPK | 🔜 Planned |
-| Exposure-Efficacy Plot | ADPK, ADRS | 🔜 Planned |
-| Waterfall + PK Overlay | ADTR, ADPK | 🔜 Planned |
+| PK Concentration-Time Curve | ADPK | ✅ Implemented |
+| Trough Level Plot | ADPK | ✅ Implemented |
+| PD Biomarker Plot | ADBM, ADPK | ✅ Implemented |
+| Exposure-Efficacy Plot | ADPK, ADRS | ✅ Implemented |
+| Waterfall + PK Overlay | ADTR, ADPK | ✅ Implemented |
 
 ---
 
