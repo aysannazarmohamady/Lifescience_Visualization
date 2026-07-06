@@ -16,9 +16,9 @@ The goal is not a visualization gallery. It is a rigorous reference implementati
 
 ## Repository Status
 
-> **Current version:** Active development, Phase I (Oncology)
+> **Current version:** Active development, approaching v1.0 (Oncology)
 >
-> The shared ADaM synthetic dataset (`Data/`) is complete and fully validated across 13 domains and 26,723 records. Visualization modules are being implemented progressively against this unified dataset. See the table below for current implementation status.
+> The shared ADaM synthetic dataset (`Data/`) is complete and fully validated across 13 domains and 26,723 records. **Version 1 scope has been narrowed to the most commonly used visualizations** across domains 01–09, so v1 can ship as a tight, high-value reference implementation rather than an exhaustive gallery. Niche, low-frequency, or highly specialized plot types (including the entirety of domains 10–12) have been moved to the [Deferred to Future Versions](#deferred-to-future-versions) list below and are out of scope for v1. See the table below for current implementation status.
 
 ---
 
@@ -105,12 +105,10 @@ Safety is not a secondary concern in clinical trials; in Phase I, it is the prim
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Adverse Event (AE) Bar Chart | ADAE | 🔜 Planned |
-| Dose-Limiting Toxicity (DLT) Plot | ADAE, ADEX | 🔜 Planned |
+| Adverse Event (AE) Bar Chart | ADAE | 🔜 Planned (v1) |
 | Toxicity Heatmap | ADAE, ADLB | ✅ Implemented |
-| Time-to-Toxicity Plot | ADAE | 🔜 Planned |
-| Exposure-Response Plot | ADPK, ADAE | 🔜 Planned |
-| Dose Escalation Plot (3+3 / BOIN) | ADEX, ADAE | 🔜 Planned |
+
+*Dose-Limiting Toxicity (DLT) Plot, Time-to-Toxicity Plot, Exposure-Response Plot, and Dose Escalation Plot (3+3/BOIN) are Phase I dose-finding niche visualizations — deferred to v2 (see below).*
 
 ---
 
@@ -134,9 +132,10 @@ Target lesion measurement trajectories and scan-level timeline visualizations br
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Sum of Longest Diameters (SLD) Over Time | ADTR | 🔜 Planned |
-| Target Lesion Change Plot | ADTR | 🔜 Planned |
-| Scan Timeline Plot | ADRS, ADTR | 🔜 Planned |
+| Sum of Longest Diameters (SLD) Over Time | ADTR | 🔜 Planned (v1) |
+| Target Lesion Change Plot | ADTR | 🔜 Planned (v1) |
+
+*Scan Timeline Plot is a lower-frequency visualization — deferred to v2 (see below).*
 
 ---
 
@@ -146,11 +145,10 @@ Meta-analytic visualizations synthesize evidence across trials, treatment arms, 
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Forest Plot | ADTTE, ADSL | 🔜 Planned |
-| Funnel Plot | External (published studies) | 🔜 Planned |
-| Network Meta-Analysis (NMA) Plot | External (published studies) | 🔜 Planned |
-| Benefit-Risk Plot | ADTTE, ADAE | 🔜 Planned |
-| Tornado Plot | ADTTE, ADAE | 🔜 Planned |
+| Forest Plot | ADTTE, ADSL | ✅ Implemented (see 03 · Biomarker & Genomics) |
+| Benefit-Risk Plot | ADTTE, ADAE | 🔜 Planned (v1) |
+
+*Funnel Plot, Network Meta-Analysis (NMA) Plot, and Tornado Plot require external multi-trial data and are lower-frequency in single-trial reporting — deferred to v2 (see below).*
 
 ---
 
@@ -160,11 +158,12 @@ Trial flow and exposure visualizations document the operational execution of a s
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| CONSORT Diagram | ADRAND, ADSL | 🔜 Planned |
-| Enrollment Over Time Plot | ADSL | 🔜 Planned |
-| Treatment Exposure Plot | ADEX | 🔜 Planned |
-| Dose Intensity Plot | ADEX | 🔜 Planned |
-| Relative Dose Intensity (RDI) Plot | ADEX | 🔜 Planned |
+| CONSORT Diagram | ADRAND, ADSL | 🔜 Planned (v1) |
+| Enrollment Over Time Plot | ADSL | 🔜 Planned (v1) |
+| Treatment Exposure Plot | ADEX | 🔜 Planned (v1) |
+| Dose Intensity Plot | ADEX | 🔜 Planned (v1) |
+
+*Relative Dose Intensity (RDI) Plot is a more granular variant of Dose Intensity Plot — deferred to v2 (see below).*
 
 ---
 
@@ -172,11 +171,7 @@ Trial flow and exposure visualizations document the operational execution of a s
 
 Cellular immunotherapy trials produce visualization challenges that have no analog in conventional pharmacological trials: CAR-T cell expansion kinetics spanning orders of magnitude, cytokine release syndrome timelines requiring hour-level resolution, and bone marrow response assessments reflecting a distinct efficacy paradigm from RECIST-based solid tumor measurement. Partially supported by ADBM and ADRS.
 
-| Visualization | Primary Data | Status |
-|---|---|---|
-| CAR-T Cell Expansion Curve | ADBM | 🔜 Planned |
-| Cytokine Release Syndrome (CRS) Timeline | ADAE, ADBM | 🔜 Planned |
-| Bone Marrow Response Plot | ADBM | 🔜 Planned |
+> **Out of scope for v1** — modality-specific to cell therapy trials, not general-purpose. All three plot types in this domain are deferred to v2 (see [Deferred to Future Versions](#deferred-to-future-versions)).
 
 ---
 
@@ -184,11 +179,7 @@ Cellular immunotherapy trials produce visualization challenges that have no anal
 
 Radiomics-based visualizations extract quantitative imaging features from radiology scans and connect them to clinical outcomes. These approaches require imaging-derived feature matrices that extend beyond standard ADaM data structures; where ADTR cannot serve as a proxy, appropriate public imaging datasets (TCIA) are referenced.
 
-| Visualization | Primary Data | Status |
-|---|---|---|
-| Heatmap Overlay (Tumor Heterogeneity) | External (TCIA) | 🔜 Planned |
-| Radiomics Feature Importance Plot | External (TCIA) | 🔜 Planned |
-| Lesion Size Over Time Plot | ADTR | 🔜 Planned |
+> **Out of scope for v1** — requires external imaging feature data and is not part of standard clinical trial reporting. All plot types in this domain are deferred to v2 (see [Deferred to Future Versions](#deferred-to-future-versions)).
 
 ---
 
@@ -196,13 +187,47 @@ Radiomics-based visualizations extract quantitative imaging features from radiol
 
 Population-level cancer epidemiology visualizations require registry-level datasets that are structurally incompatible with the single-trial ADaM architecture. This domain references SEER and GLOBOCAN as authoritative public data sources.
 
-| Visualization | Primary Data | Status |
-|---|---|---|
-| Age-Standardized Incidence Rate (ASR) Plot | External (SEER / GLOBOCAN) | 🔜 Planned |
-| Cancer Incidence Trend Line | External (SEER / GLOBOCAN) | 🔜 Planned |
-| Mortality-to-Incidence Ratio Plot | External (SEER / GLOBOCAN) | 🔜 Planned |
-| Stage Distribution Bar Chart | ADSL / External | 🔜 Planned |
-| Prevalence Pie / Donut Chart | External (SEER / GLOBOCAN) | 🔜 Planned |
+> **Out of scope for v1** — population-registry visualizations, not single-trial reporting outputs. All plot types in this domain are deferred to v2 (see [Deferred to Future Versions](#deferred-to-future-versions)).
+
+---
+
+## Deferred to Future Versions
+
+The following plot types are lower-frequency, modality-specific, or dependent on external data outside the core ADaM/ONCVIZ-001 scope. They remain part of the long-term catalog vision but are **not** part of v1 and will be added in v2 or later, prioritized roughly in the order listed.
+
+**05 · Safety & Toxicity**
+- Dose-Limiting Toxicity (DLT) Plot
+- Time-to-Toxicity Plot
+- Exposure-Response Plot
+- Dose Escalation Plot (3+3 / BOIN)
+
+**07 · Imaging & Tumor Measurement**
+- Scan Timeline Plot
+
+**08 · Meta-Analysis & Comparison**
+- Funnel Plot
+- Network Meta-Analysis (NMA) Plot
+- Tornado Plot
+
+**09 · Trial Design & Patient Flow**
+- Relative Dose Intensity (RDI) Plot
+
+**10 · Cell Therapy / CAR-T Specific**
+- CAR-T Cell Expansion Curve
+- Cytokine Release Syndrome (CRS) Timeline
+- Bone Marrow Response Plot
+
+**11 · Radiomics & Imaging Analytics**
+- Heatmap Overlay (Tumor Heterogeneity)
+- Radiomics Feature Importance Plot
+- Lesion Size Over Time Plot
+
+**12 · Epidemiology & Incidence**
+- Age-Standardized Incidence Rate (ASR) Plot
+- Cancer Incidence Trend Line
+- Mortality-to-Incidence Ratio Plot
+- Stage Distribution Bar Chart
+- Prevalence Pie / Donut Chart
 
 ---
 
@@ -258,15 +283,16 @@ Lifescience_Visualization/
     ├── Survival_TimeToEvent/          ← 11 plot types
     ├── Biomarker_Genomics/            ← 15 plot types
     ├── Immunology_Cellular/           ← 6 plot types
-    ├── Meta_Analysis/                 ← Forest Plot (subgroup/meta)
+    ├── Meta_Analysis/                 ← Forest Plot, Benefit-Risk Plot (v1 scope only)
     ├── Uncategorized/                 ← Heatmap_plot, Stackedbar_plot (pending re-classification)
-    ├── 05_Safety_Toxicity/            ← 6 plot types
+    ├── 05_Safety_Toxicity/            ← 2 plot types (v1 scope)
     ├── 06_PK_PD/                      ← 5 plot types
-    ├── 07_Imaging_Tumor_Measurement/  ← 3 plot types
-    ├── 09_Trial_Design_Patient_Flow/  ← 5 plot types
-    ├── 10_Cell_Therapy_CART/          ← 3 plot types
-    ├── 11_Radiomics_Imaging/          ← 3 plot types
-    └── 12_Epidemiology_Incidence/     ← 5 plot types
+    ├── 07_Imaging_Tumor_Measurement/  ← 2 plot types (v1 scope)
+    └── 09_Trial_Design_Patient_Flow/  ← 4 plot types (v1 scope)
+
+# 10_Cell_Therapy_CART/, 11_Radiomics_Imaging/, and 12_Epidemiology_Incidence/
+# are deferred to v2+ and excluded from the v1 folder structure — see
+# "Deferred to Future Versions" above.
 ```
 
 Each visualization folder follows a uniform structure:
