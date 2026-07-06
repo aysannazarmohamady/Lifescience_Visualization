@@ -273,26 +273,26 @@ Lifescience_Visualization/
 │   ├── generate_adam_oncviz001.R
 │   └── README.md                     ← Full dataset methodology and validation
 │
-└── oncology/
-    ├── Response_Assessment/           ← 5 plot types
-    │   ├── Bor_plot/
-    │   ├── Spider_plot/
-    │   ├── swimmer_plot/
-    │   ├── Tumor_Burden_plot/
-    │   └── Waterfall_plot/
-    ├── Survival_TimeToEvent/          ← 11 plot types
-    ├── Biomarker_Genomics/            ← 15 plot types
-    ├── Immunology_Cellular/           ← 6 plot types
-    ├── Meta_Analysis/                 ← Forest Plot, Benefit-Risk Plot (v1 scope only)
-    ├── Uncategorized/                 ← Heatmap_plot, Stackedbar_plot (pending re-classification)
-    ├── 05_Safety_Toxicity/            ← 2 plot types (v1 scope)
-    ├── 06_PK_PD/                      ← 5 plot types
-    ├── 07_Imaging_Tumor_Measurement/  ← 2 plot types (v1 scope)
-    └── 09_Trial_Design_Patient_Flow/  ← 4 plot types (v1 scope)
+└── clinical_trials/
+    └── Oncology/
+        ├── Response_Assessment/       ← 5 plot types
+        │   ├── Bor_plot/
+        │   ├── Spider_plot/
+        │   ├── swimmer_plot/
+        │   ├── Tumor_Burden_plot/
+        │   └── Waterfall_plot/
+        ├── Survival_TimeToEvent/      ← 11 plot types
+        ├── Biomarker_Genomics/        ← 15 plot types
+        ├── Immunology_Cellular/       ← 6 plot types
+        ├── Meta_Analysis/             ← Forest Plot, Benefit-Risk Plot (v1 scope only)
+        │   └── forest_plot/
+        ├── PK_PD/                     ← 5 plot types
+        └── Uncategorized/             ← Heatmap_plot, Stackedbar_plot (pending re-classification)
 
-# 10_Cell_Therapy_CART/, 11_Radiomics_Imaging/, and 12_Epidemiology_Incidence/
-# are deferred to v2+ and excluded from the v1 folder structure — see
-# "Deferred to Future Versions" above.
+# Folders for Safety_Toxicity, Imaging_Tumor_Measurement, and Trial_Design_Patient_Flow
+# will be added once their v1-scope plots are implemented (currently 🔜 Planned).
+# Cell_Therapy_CART, Radiomics_Imaging, and Epidemiology_Incidence are deferred to
+# v2+ and intentionally do not exist in the repo yet — see "Deferred to Future Versions" above.
 ```
 
 Each visualization folder follows a uniform structure:
