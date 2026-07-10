@@ -105,7 +105,7 @@ Safety is not a secondary concern in clinical trials; in Phase I, it is the prim
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Adverse Event (AE) Bar Chart | ADAE | 🔜 Planned (v1) |
+| Adverse Event (AE) Bar Chart | ADAE | ✅ Implemented |
 | Toxicity Heatmap | ADAE, ADLB | ✅ Implemented |
 
 *Dose-Limiting Toxicity (DLT) Plot, Time-to-Toxicity Plot, Exposure-Response Plot, and Dose Escalation Plot (3+3/BOIN) are Phase I dose-finding niche visualizations — deferred to v2 (see below).*
@@ -132,8 +132,8 @@ Target lesion measurement trajectories and scan-level timeline visualizations br
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| Sum of Longest Diameters (SLD) Over Time | ADTR | 🔜 Planned (v1) |
-| Target Lesion Change Plot | ADTR | 🔜 Planned (v1) |
+| Sum of Longest Diameters (SLD) Over Time | ADTR | ✅ Implemented |
+| Target Lesion Change Plot | ADTR | ✅ Implemented |
 
 *Scan Timeline Plot is a lower-frequency visualization — deferred to v2 (see below).*
 
@@ -146,7 +146,7 @@ Meta-analytic visualizations synthesize evidence across trials, treatment arms, 
 | Visualization | Primary Data | Status |
 |---|---|---|
 | Forest Plot | ADTTE, ADSL | ✅ Implemented (see 03 · Biomarker & Genomics) |
-| Benefit-Risk Plot | ADTTE, ADAE | 🔜 Planned (v1) |
+| Benefit-Risk Plot | ADTTE, ADAE | ✅ Implemented |
 
 *Funnel Plot, Network Meta-Analysis (NMA) Plot, and Tornado Plot require external multi-trial data and are lower-frequency in single-trial reporting — deferred to v2 (see below).*
 
@@ -158,10 +158,10 @@ Trial flow and exposure visualizations document the operational execution of a s
 
 | Visualization | Primary Data | Status |
 |---|---|---|
-| CONSORT Diagram | ADRAND, ADSL | 🔜 Planned (v1) |
-| Enrollment Over Time Plot | ADSL | 🔜 Planned (v1) |
-| Treatment Exposure Plot | ADEX | 🔜 Planned (v1) |
-| Dose Intensity Plot | ADEX | 🔜 Planned (v1) |
+| CONSORT Diagram | ADRAND, ADSL | ✅ Implemented |
+| Enrollment Over Time Plot | ADSL | ✅ Implemented |
+| Treatment Exposure Plot | ADEX | ✅ Implemented |
+| Dose Intensity Plot | ADEX | ✅ Implemented |
 
 *Relative Dose Intensity (RDI) Plot is a more granular variant of Dose Intensity Plot — deferred to v2 (see below).*
 

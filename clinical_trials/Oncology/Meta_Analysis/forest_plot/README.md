@@ -1,6 +1,6 @@
-# Forest Plot — Overall Survival Subgroup Analysis
+# Forest Plot — Overall Survival Subgroup Analysis (ADaM-driven)
 
-A publication-ready forest plot reporting Cox proportional hazards hazard ratios (HR) with 95% confidence intervals for overall survival across 12 pre-specified subgroups, comparing the treatment arm against control in the ONCVIZ-001 synthetic basket trial. The overall HR is rendered as a diamond; subgroups with CI entirely below HR = 1 are highlighted in red.
+A publication-ready forest plot reporting Cox proportional hazards ratios (HR) with 95% confidence intervals for overall survival across 16 pre-specified subgroups, comparing the treatment arm against control in the ONCVIZ-001 synthetic basket trial, with inverse-variance weight shown as marker size and a companion HR/CI/weight text table.
 
 **Dataset:** ONCVIZ-001 · Treatment (n = 62) vs. Control (n = 18) · ADTTE / ADSL | **Endpoint:** Overall Survival (OS) | **Language:** R · ggplot2 · survival | **License:** CC BY 4.0
 
@@ -8,130 +8,79 @@ A publication-ready forest plot reporting Cox proportional hazards hazard ratios
 
 ## The gap this fills
 
-Forest plots are mandatory in regulatory submissions and meta-analyses for communicating treatment effect heterogeneity across patient subgroups. R implementations often fall into two categories: (1) purpose-built packages (`forestplot`, `meta`) with limited ggplot2 integration and rigid styling, or (2) raw `ggplot2` builds that omit the subgroup header rows, the overall diamond symbol, or the log-scale x-axis with arrow annotations.
+Forest plots are mandatory in regulatory submissions for communicating treatment-effect heterogeneity across subgroups. Most ggplot2 builds omit the weight-proportional marker size that read-through publications use to communicate subgroup precision at a glance, and few pair the graphic with a text column reproducing the exact HR/CI/weight values next to each row.
 
 | | Prior art | This work |
 |---|---|---|
-| Overall HR symbol | Circle or square | Diamond (`shape = 18`) in dark blue |
-| Significant subgroups | Not highlighted | Red point when 95% CI excludes HR = 1 |
-| X-axis scale | Linear or log (unlabeled) | Log₁₀ with clinical fraction breaks (0.1, 0.25, 0.5, 1, 2, 4) |
-| Arrow annotation | Not shown | Caption: "← Favors Treatment   Favors Control →" |
-| Reference line | Dashed at 1 | `geom_vline` at x = 1 |
-| CI truncation | Not shown | CI clipped to (0.05, 10) range; arrows in caption |
-| Cox model | Unstratified | Per-subgroup `coxph(Surv(AVAL, EVENT) ~ TRT)` |
-| Reproducibility | No fixed seed | `set.seed(4)` · bitwise-identical |
+| Marker size | Fixed | ∝ inverse-variance weight (1/SE² of log HR), with a size legend |
+| Text columns | Not shown, or a separate table | HR (95% CI) and Weight % columns aligned to each row |
+| Overall HR symbol | Circle or square | Diamond, dark blue |
+| Significant subgroups | Not highlighted | Red when 95% CI excludes HR = 1 |
+| X-axis scale | Linear or unlabeled log | Log₁₀ with clinical fraction breaks (0.1, 0.25, 0.5, 1, 2, 4) |
+| Cox model | Unstratified pooled | Per-subgroup `coxph(Surv(AVAL, EVENT) ~ TRT)` |
+| Reproducibility | Inline synthetic data | Reads real `ADTTE`/`ADSL` from `Data/V1` |
 
 ---
 
 ## Visual anatomy
 
 ```
-  Subgroup              HR (95% CI)
-  ─────────────────────────────────────────────────────── HR = 1
-  Overall           ◆─────────────────────────────── (diamond)
-  NSCLC             ●────────────────────
-  CRC               ●──────────────────────────
-  BRCA              ●────────────────
-  HCC               ● (small n)
-  < 65 yrs          ●──────────────
-  ≥ 65 yrs          ●──────────────────────
-  Male              ●──────────────
-  Female            ●──────────────────
-  TMB-High          ●────────────
-  TMB-Low           ●────────────────────
-  KRAS Mut          ● (red, CI < 1) ─────
-  KRAS WT           ●────────────────────
-  ─────────────────────────────────────────────────────── 
+  Subgroup              HR (95% CI)          Weight %
+  ─────────────────────────────────────────────────── HR = 1
+  Overall           ◆────────────────           0.51 (0.27–0.98)     —
+  NSCLC             ●───────────────            0.36 (0.04–3.12)   1.7%
+  Age < 65          ●──── (red, sig)            0.24 (0.09–0.61)   8.9%
+  ...
+  ─────────────────────────────────────────────────────
    0.1   0.25  0.5    1      2      4
+   ← Favors Treatment      Favors Control →
 ```
 
 | Element | Description |
 |---|---|
-| Diamond (◆) | Overall HR · `shape = 18 · size = 5 · color = #1a3f8f` |
-| Gray circle (●) | Subgroup HR · `shape = 16 · size = 2.5` |
-| Red circle (●) | Subgroup with 95% CI entirely below 1 · `color = #c0392b` |
-| Horizontal error bars | 95% CI from `coxph` · clipped to (0.05, 10) |
+| Diamond (◆) | Overall pooled HR |
+| Circle (●), size-scaled | Subgroup HR, radius ∝ inverse-variance weight |
+| Red circle | Subgroup with 95% CI entirely below HR = 1 |
 | Dashed vertical line | HR = 1 reference |
+| Weight legend | Three reference dot sizes shown below the x-axis |
 
 ---
 
-## Output figure
-
-| File | Dimensions | DPI |
-|---|---|---|
-| `plots/04_forest.png` | 13 × 9 in | 180 |
-
----
-
-## Synthetic dataset — ONCVIZ-001 ADaM v1 (ADTTE / ADSL)
-
-```
-n patients     80 (TRT = 62 · CTL = 18)
-Endpoint       Overall Survival (OS)
-Event          Death from any cause (EVENT = 1 − CNSR)
-Subgroups      12 (tumor type × 3 · age × 2 · sex × 2 · TMB × 2 · KRAS × 2)
-Seed           4 · fully reproducible
-```
-
-### Variables used
+## Dataset variables used
 
 | Variable | Source | Description |
 |---|---|---|
-| `USUBJID` | ADTTE / ADSL | Subject identifier |
-| `ARM` | ADTTE | "TREATMENT" · "CONTROL" |
-| `AVAL` | ADTTE | Time to event (months) |
-| `CNSR` | ADTTE | Censoring flag (1 = censored · 0 = event) |
-| `EVENT` | Derived | `1 − CNSR` |
-| `TRT` | Derived | `as.integer(ARM == "TREATMENT")` |
-| `TUMORTYPE` | ADSL | Histology |
-| `AGEGR1` | ADSL | Age group ("<65" · ">=65") |
-| `SEX` | ADSL | "M" · "F" |
-| `TMBHIGH` | ADSL | TMB-high flag ("Y" · "N") |
-| `KRASMUT` | ADSL | KRAS mutation flag ("Y" · "N") |
+| `USUBJID`, `ARM` | ADTTE | Subject identifier, arm |
+| `AVAL`, `CNSR` | ADTTE | Time to event, censoring flag |
+| `TUMORTYPE`, `AGEGR1`, `SEX`, `ECOG`, `TMBHIGH`, `PDL1GRP` | ADTTE | Subgroup stratification variables |
 
 ---
 
 ## Statistical method
 
-A separate **Cox proportional hazards model** is fitted for each subgroup:
+A separate Cox model is fit per subgroup: `coxph(Surv(AVAL, EVENT) ~ TRT, data = subgroup_df)`, with `EVENT = 1 - CNSR`. HR = exp(coefficient); 95% CI from `confint()`. Inverse-variance weight = `1/SE²` of the log-HR, normalized to sum to 100% across subgroup rows (the Overall summary row is excluded from this normalization, consistent with meta-analysis convention).
 
-```r
-coxph(Surv(AVAL, EVENT) ~ TRT, data = subgroup_df)
-```
-
-`TRT = 1` for treatment, `TRT = 0` for control. The exponential of the coefficient gives the HR; 95% CI is derived from `confint()` on the log-HR scale.
-
-**Conditions for valid HR estimation:** Both arms must have ≥ 2 patients with ≥ 1 event; otherwise `NA` is returned and no point is drawn. With n = 18 controls, many subgroup control arms are very small — CIs are wide and should be interpreted with caution.
-
-**Proportional hazards assumption:** Not formally tested in this script. In practice, `cox.zph()` should be run on the overall fit before reporting.
+**Conditions for valid estimation:** both arms need ≥2 patients with ≥1 event; otherwise the row is marked NE (not estimable).
 
 ---
 
 ## Key parameters
 
-| Parameter | Value | Description |
-|---|---|---|
-| CI method | `confint(coxph_fit)` | Profile likelihood CI on log-HR scale |
-| Reference arm | CONTROL | `TRT = 0` |
-| Minimum arm size | 2 patients each | Below this, HR returned as NA |
-| CI x-clip | (0.05, 10) | `pmax(lo, 0.05)` · `pmin(hi, 10)` |
-| X-axis breaks | 0.1, 0.25, 0.5, 1, 2, 4 | Log scale |
-| Overall shape | 18 (diamond) | `size = 5` |
-| Subgroup shape | 16 (filled circle) | `size = 2.5` |
-| Significant color | `#c0392b` | Red · when `hi < 1` |
-| Overall color | `#1a3f8f` | Dark blue |
-| Non-significant color | `#555555` | Gray |
-| Figure dimensions | 13 × 9 in | Portrait, readable subgroup labels |
-| DPI | 180 | Publication quality |
+| Parameter | Value |
+|---|---|
+| CI method | `confint(coxph_fit)`, profile likelihood on log-HR scale |
+| CI x-clip | (0.05, 10) for display only |
+| X-axis breaks | 0.1, 0.25, 0.5, 1, 2, 4 |
+| Marker size range | 2–9 pt radius, linear in weight % |
 
 ---
 
 ## Limitations
 
-- **Small control arm (n = 18):** Subgroup control arms may contain as few as 2–4 patients. CIs will be extremely wide and median OS may not be estimable. This is inherent to Phase I/II basket trial designs.
-- **Unstratified Cox model:** The per-subgroup model does not stratify by other covariates (tumor type, age). A stratified or multivariable model is needed if confounding is a concern.
-- **No interaction test:** A statistically valid test of treatment-by-subgroup interaction (the correct test for effect modification) is not included. Visually, a CI that excludes HR = 1 for a subgroup does *not* imply a significant interaction — this is a common misinterpretation.
-- **Multiple testing:** 12 subgroup-level p-values are implicitly presented. No adjustment is applied; subgroup results should be considered exploratory.
+- **Small control arm (n = 18)** means several subgroup control cells contain only 2–5 patients; CIs are correspondingly wide.
+- **Unstratified per-subgroup Cox model** — no adjustment for other covariates within each subgroup fit.
+- **No formal interaction test.** A CI excluding HR = 1 in one subgroup does not, by itself, constitute a significant treatment-by-subgroup interaction.
+- **Multiple testing.** 16 subgroup estimates are shown without adjustment; treat as exploratory/hypothesis-generating.
 
 ---
 
@@ -149,17 +98,16 @@ library(survival)   # >= 3.5
 
 | File | Description |
 |---|---|
-| `04_forest.R` | Self-contained script · synthetic data generated internally |
-| `plots/04_forest.png` | Output figure · 13 × 9 in · 180 DPI |
+| `forest_plot.R` | Self-contained script · reads `Data/V1/ADTTE.csv` |
+| `Out/forest_plot.png` | Output figure · 11 × 8.3 in · 300 DPI |
+| `Out/forest_plot_table.csv` | Companion table: label, n, HR, CI, weight % |
 
 ---
 
 ## References
 
-Therneau TM, Grambsch PM. *Modeling Survival Data: Extending the Cox Model.* Springer, 2000.
+Therneau TM, Grambsch PM. *Modeling Survival Data: Extending the Cox Model.* Springer; 2000.
 
 Pocock SJ, Assmann SE, Enos LE, Kasten LE. Subgroup analysis, covariate adjustment and baseline comparisons in clinical trial reporting: current practice and problems. *Stat Med.* 2002;21(19):2917–2930.
 
-Royston P, Altman DG. Visualizing and assessing discrimination in the logistic regression model. *Stat Med.* 2010;29(24):2508–2520.
-
-ICH E9(R1). Statistical Principles for Clinical Trials: Addendum on Estimands and Sensitivity Analysis. 2019.
+ICH E9(R1). *Statistical Principles for Clinical Trials: Addendum on Estimands and Sensitivity Analysis.* 2019.
