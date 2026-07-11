@@ -37,6 +37,7 @@ The central question of any oncology efficacy trial is whether the treatment wor
 | Swimmer Plot | ADSL, ADRS, ADTR | ✅ Implemented |
 | Best Overall Response (BOR) Plot | ADRS | ✅ Implemented |
 | Tumor Burden Plot | ADTR | ✅ Implemented |
+| Response Heatmap (ORR by Dose-Cohort × Tumor-Type) | ADRS | ✅ Implemented |
 
 ---
 
@@ -275,22 +276,25 @@ Lifescience_Visualization/
 │
 └── clinical_trials/
     └── Oncology/
-        ├── Response_Assessment/       ← 5 plot types
+        ├── Response_Assessment/       ← 6 plot types
         │   ├── Bor_plot/
+        │   ├── Response_Heatmap_plot/
         │   ├── Spider_plot/
         │   ├── swimmer_plot/
         │   ├── Tumor_Burden_plot/
         │   └── Waterfall_plot/
-        ├── Survival_TimeToEvent/      ← 11 plot types
-        ├── Biomarker_Genomics/        ← 15 plot types
+        ├── Survival_TimeToEvent/      ← 11 plot types (2 scripts)
+        │   ├── SurvivalCurves_plot/
+        │   └── TimetoEvent_plot/
+        ├── Biomarker_Genomics/        ← 14 plot types
         ├── Immunology_Cellular/       ← 6 plot types
         ├── Meta_Analysis/             ← Forest Plot, Benefit-Risk Plot (v1 scope only)
-        │   └── forest_plot/
+        │   ├── forest_plot/
+        │   └── Benefit_Risk_plot/
         ├── PK_PD/                     ← 5 plot types
-        └── Uncategorized/             ← Heatmap_plot, Stackedbar_plot (pending re-classification)
-
-# Folders for Safety_Toxicity, Imaging_Tumor_Measurement, and Trial_Design_Patient_Flow
-# will be added once their v1-scope plots are implemented (currently 🔜 Planned).
+        ├── Safety_Toxicity/           ← 2 plot types
+        ├── Imaging_Tumor_Measurement/ ← 2 plot types
+        └── Trial_Design_Patient_Flow/ ← 4 plot types
 # Cell_Therapy_CART, Radiomics_Imaging, and Epidemiology_Incidence are deferred to
 # v2+ and intentionally do not exist in the repo yet — see "Deferred to Future Versions" above.
 ```
