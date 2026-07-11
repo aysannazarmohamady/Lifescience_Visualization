@@ -5,7 +5,7 @@ suppressPackageStartupMessages({
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 DATA_DIR   <- "./Data/V1"
-OUTPUT_DIR <- "./Out"
+OUTPUT_DIR <- "./clinical_trials/Oncology/Biomarker_Genomics/TMB_plot/output"
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # ── Load data ─────────────────────────────────────────────────────────────────

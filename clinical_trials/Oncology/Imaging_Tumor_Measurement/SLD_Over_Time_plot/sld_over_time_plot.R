@@ -4,7 +4,7 @@ suppressPackageStartupMessages({
 })
 
 DATA_DIR   <- "./Data/V1"
-OUTPUT_DIR <- "./Out"
+OUTPUT_DIR <- "./clinical_trials/Oncology/Imaging_Tumor_Measurement/SLD_Over_Time_plot/output"
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 adtr <- read.csv(file.path(DATA_DIR, "ADTR.csv"), stringsAsFactors = FALSE) %>% filter(PARAMCD == "SUMDIAM")

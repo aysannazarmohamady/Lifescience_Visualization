@@ -129,11 +129,11 @@ p <- ggplot(cell_df, aes(x = TUMORTYPE, y = COHORT)) +
     panel.background = element_rect(fill = "white", color = NA)
   )
 
-ggsave(file.path(OUTPUT_DIR, "bor_heatmap.png"),
+ggsave(file.path(OUTPUT_DIR, "response_heatmap.png"),
        plot   = p,
        width  = 14,
        height = 9,
        dpi    = 150,
        bg     = "white")
 
-message("Saved: bor_heatmap.png")
+message("Saved: response_heatmap.png")
