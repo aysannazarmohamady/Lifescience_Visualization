@@ -52,7 +52,7 @@ fdf <- fdf %>%
   mutate(w = ifelse(!overall & !is.na(se) & se > 0, 1 / se^2, NA)) %>%
   mutate(weight_pct = ifelse(!overall, 100 * w / sum(w, na.rm = TRUE), NA))
 
-fdf$label <- factor(fdf$label, levels = rev(fdf$label))
+fdf$label <- factor(paste0(fdf$label, " (n=", fdf$n, ")"), levels = rev(paste0(fdf$label, " (n=", fdf$n, ")")))
 fdf <- fdf %>% mutate(sig = !overall & !is.na(hi) & hi < 1,
                        lo_c = pmax(lo, 0.05), hi_c = pmin(hi, 10))
 

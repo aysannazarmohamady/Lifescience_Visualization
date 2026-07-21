@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#1f2a44"/><text x="60" y="68" font-size="40" text-anchor="middle" fill="#fff" font-family="sans-serif">📊</text></svg></template>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: oklch(0.98 0.005 250); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</helmet>
+<div style="font-family: -apple-system, Helvetica, Arial, sans-serif; min-height: 100vh; padding: 48px 56px 80px;">
+  <div style="max-width: 1160px; margin: 0 auto 40px;">
+    <h1 style="font-size: 34px; font-weight: 700; color: oklch(0.22 0.02 250); margin: 0 0 10px; letter-spacing: -0.01em;">Lifescience Visualization</h1>
+    <p style="font-size: 17px; line-height: 1.55; color: oklch(0.35 0.02 250); max-width: 760px; margin: 0 0 14px; font-weight: 600;">A systematic, production-ready catalog of clinical trial visualizations for oncology research, grounded in calibrated synthetic ADaM data, implemented in R, and structured for direct deployment in regulatory and scientific contexts.</p>
+    <p style="font-size: 15px; line-height: 1.6; color: oklch(0.45 0.02 250); max-width: 780px; margin: 0 0 10px;">Clinical trials generate some of the most consequential data in medicine, yet the standards governing how that data is <em>visualized</em> have lagged behind analytical standards. Regulatory submissions, publications, and clinical team reviews still rely on dense summary tables that demand substantial interpretive effort and offer little intuition about what is happening at the level of individual patients or biological mechanisms.</p>
+    <p style="font-size: 15px; line-height: 1.6; color: oklch(0.45 0.02 250); max-width: 780px; margin: 0 0 10px;">This repository addresses that gap systematically: a comprehensive, domain-stratified implementation of the visualization methods used across oncology clinical trial research, from individual patient response timelines to population-level pharmacokinetics, adverse event profiling, genomic landscape characterization, single-cell immunophenotyping, and competing-risks survival analysis. Most implementations share a synthetic dataset, ONCVIZ-001, following ADaM regulatory standards and traceable to published clinical trial data; a subset of the genomic and cellular visualizations instead use plot-local synthetic data calibrated to realistic biological ranges.</p>
+    <p style="font-size: 15px; line-height: 1.6; color: oklch(0.45 0.02 250); max-width: 780px; margin: 0 0 20px;">The goal is not a visualization gallery &mdash; it is a rigorous reference implementation: grounded in regulatory methodology, calibrated to published efficacy and safety benchmarks, implemented cleanly in R, and structured so each visualization can be understood, validated, and deployed independently.</p>
+    <p style="font-size: 13px; color: oklch(0.55 0.02 250); margin: 0;">{{ plotCount }} plots across {{ domainCount }} domains &mdash; click any plot to view it full-size.</p>
+  </div>
+
+  <sc-for list="{{ domains }}" as="dom" hint-placeholder-count="9">
+    <div style="max-width: 1160px; margin: 0 auto 36px;">
+      <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid oklch(0.9 0.005 250); padding-bottom: 8px; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 700; color: oklch(0.25 0.02 250); margin: 0;">{{ dom.name }}</h2>
+        <span style="font-size: 13px; color: oklch(0.6 0.02 250);">{{ dom.count }} plots</span>
+        <span style="font-size: 13px; color: oklch(0.5 0.02 250);">&mdash; {{ dom.groupDesc }}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+        <sc-for list="{{ dom.items }}" as="item" hint-placeholder-count="4">
+          <div onClick="{{ item.open }}" style="cursor: pointer; background: white; border: 1px solid oklch(0.91 0.005 250); border-radius: 4px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;" style-hover="transform: translateY(-2px); box-shadow: 0 6px 20px oklch(0.2 0.02 250 / 0.12);">
+            <div style="aspect-ratio: 4/3; overflow: hidden; background: oklch(0.96 0.005 250);">
+              <img src="{{ item.path }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy"/>
+            </div>
+            <div style="padding: 10px 12px; font-size: 13px; font-weight: 600; color: oklch(0.3 0.02 250);">{{ item.title }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+
+  <sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position: fixed; inset: 0; background: oklch(0.15 0.01 250 / 0.82); display: flex; align-items: center; justify-content: center; padding: 40px; z-index: 50; animation: fadeIn 0.15s;">
+      <div onClick="{{ stop }}" style="max-width: 90vw; max-height: 88vh; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+          <div>
+            <div style="color: white; font-size: 18px; font-weight: 700;">{{ selected.title }}</div>
+            <div style="color: oklch(0.85 0.01 250); font-size: 14px; margin-top: 4px;">{{ selected.desc }}</div>
+          </div>
+          <div onClick="{{ closeModal }}" style="cursor: pointer; color: white; font-size: 14px; border: 1px solid oklch(1 0 0 / 0.4); border-radius: 4px; padding: 6px 12px; flex-shrink: 0;">Close</div>
+        </div>
+        <img ref="{{ imgRef }}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" style="max-width: 90vw; max-height: 78vh; object-fit: contain; border-radius: 4px; background: white;"/>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const RAW = [
+  ["Response Assessment", "How tumors shrink, grow, or stabilize per patient over the course of treatment.", [
+    ["Waterfall Plot", "Best % change in tumor size per patient, ranked bar by bar.", "clinical_trials/Oncology/Response_Assessment/Waterfall_plot/output/waterfall_5panel.png"],
+    ["Spider Plot", "Tumor size trajectories over time, one line per patient.", "clinical_trials/Oncology/Response_Assessment/Spider_plot/output/spider_plot_A_tumor_type.png"],
+    ["Swimmer Plot", "Treatment duration and key events per patient as horizontal bars.", "clinical_trials/Oncology/Response_Assessment/swimmer_plot/output/swimmer_all_treatment.png"],
+    ["Best Overall Response", "Heatmap of each patient's best confirmed RECIST response.", "clinical_trials/Oncology/Response_Assessment/Bor_plot/output/bor_heatmap.png"],
+    ["Tumor Burden Plot", "Aggregate tumor burden trend across the study population.", "clinical_trials/Oncology/Response_Assessment/Tumor_Burden_plot/output/tumor_burden_plot.png"],
+    ["Response Heatmap", "Response category by patient and visit, at a glance.", "clinical_trials/Oncology/Response_Assessment/Response_Heatmap_plot/output/response_heatmap.png"]
+  ]],
+  ["Survival & Time-to-Event", "Time-to-event outcomes like overall and progression-free survival.", [
+    ["Kaplan-Meier / OS Curve", "Overall survival probability over time by treatment arm.", "clinical_trials/Oncology/Survival_TimeToEvent/SurvivalCurves_plot/output/km_overall_survival.png"],
+    ["RMST Plot", "Restricted mean survival time compared across arms.", "clinical_trials/Oncology/Survival_TimeToEvent/TimetoEvent_plot/output/RMST_plot.png"]
+  ]],
+  ["Biomarker & Genomics", "Molecular profiling: mutations, copy number, expression, and variant signals.", [
+    ["Lollipop Plot", "Mutation positions and frequency mapped along a gene's protein domains.", "clinical_trials/Oncology/Biomarker_Genomics/Lollipop_plot/output/01_lollipop_redesigned.png"],
+    ["OncoPrint", "Mutation and alteration matrix across patients and genes.", "clinical_trials/Oncology/Biomarker_Genomics/OncoPrint/output/02_oncoprint_redesigned.png"],
+    ["Volcano Plot", "Statistical significance vs. effect size for differential expression.", "clinical_trials/Oncology/Biomarker_Genomics/Volcano_plot/output/03_volcano_redesigned.png"],
+    ["Mutation Landscape", "Genome-wide overview of mutation types and hotspots.", "clinical_trials/Oncology/Biomarker_Genomics/Mutation_Landscape_plot/output/05_mutation_landscape_redesigned.png"],
+    ["CNV Plot", "Copy number gains and losses across chromosomes.", "clinical_trials/Oncology/Biomarker_Genomics/cnv_plot/output/06_cnv_redesigned.png"],
+    ["Circos Plot", "Genome-wide structural variants and rearrangements in a circular layout.", "clinical_trials/Oncology/Biomarker_Genomics/circos_plot/output/07_circos_redesigned.png"],
+    ["Manhattan Plot", "Genome-wide association signal strength by chromosomal position.", "clinical_trials/Oncology/Biomarker_Genomics/manhattan_plot/output/08_manhattan_redesigned.png"],
+    ["Miami Plot", "Two mirrored Manhattan plots comparing two studies or cohorts.", "clinical_trials/Oncology/Biomarker_Genomics/miami_plot/output/09_miami_redesigned.png"],
+    ["Rainfall Plot", "Distance between consecutive mutations, revealing mutation clusters.", "clinical_trials/Oncology/Biomarker_Genomics/rainfall_plot/output/rainfall_plot.png"],
+    ["Signature Plot", "Relative contribution of mutational signatures per sample.", "clinical_trials/Oncology/Biomarker_Genomics/signature_plot/output/11_signature_redesigned.png"],
+    ["VAF Plot", "Variant allele frequency distribution across samples.", "clinical_trials/Oncology/Biomarker_Genomics/vaf_plot/output/12_vaf_redesigned.png"],
+    ["ctDNA Dynamics", "Circulating tumor DNA levels tracked over treatment time.", "clinical_trials/Oncology/Biomarker_Genomics/ctdna_plot/output/13_ctdna_redesigned.png"],
+    ["TMB Plot", "Tumor mutational burden distribution across the cohort.", "clinical_trials/Oncology/Biomarker_Genomics/TMB_plot/output/tmb_plot.png"],
+    ["MSI Plot", "Microsatellite instability status across patients.", "clinical_trials/Oncology/Biomarker_Genomics/msi_plot/output/14_msi_redesigned.png"]
+  ]],
+  ["Immunology & Cellular", "Immune cell populations and phenotypes from single-cell and flow data.", [
+    ["Flow Cytometry", "Sequential gating strategy to isolate a cell population.", "clinical_trials/Oncology/Immunology_Cellular/FlowCytometry_plot/output/flow_gating.png"],
+    ["UMAP Plot", "Single-cell populations projected into 2D by similarity.", "clinical_trials/Oncology/Immunology_Cellular/Umap_plot/output/plot2_umap.png"],
+    ["t-SNE Plot", "Alternate 2D embedding of single-cell clusters.", "clinical_trials/Oncology/Immunology_Cellular/Tsne_plot/output/plot3_tsne.png"],
+    ["Cell Composition Bar", "Relative immune cell type proportions per sample.", "clinical_trials/Oncology/Immunology_Cellular/Cell_Composition_Bar_plot/output/plot4_stacked_bar_fixed.png"],
+    ["Immune Infiltration Heatmap", "Immune cell infiltration levels across tumor samples.", "clinical_trials/Oncology/Immunology_Cellular/Immune_Cell_Infiltration_Heatmap_plot/output/plot5_heatmap.png"],
+    ["CyTOF Dot Plot", "Marker co-expression across mass cytometry events.", "clinical_trials/Oncology/Immunology_Cellular/CyTOFDot_plot/output/plot6_cytof_dotplot.png"]
+  ]],
+  ["Safety & Toxicity", "Adverse event frequency, severity, and toxicity patterns.", [
+    ["AE Bar Chart", "Most frequent adverse events ranked by incidence.", "clinical_trials/Oncology/Safety_Toxicity/AE_Bar_Chart_plot/output/01_AE_Bar_Chart.png"],
+    ["Toxicity Heatmap", "Adverse event grade by patient across the study.", "clinical_trials/Oncology/Safety_Toxicity/Toxicity_Heatmap_plot/output/toxicity_heatmap.png"]
+  ]],
+  ["Pharmacokinetics / Pharmacodynamics", "Drug exposure over time and its relationship to biological effect.", [
+    ["PK Concentration-Time", "Drug plasma concentration profile after dosing.", "clinical_trials/Oncology/PK_PD/PK_Concentration_Time_plot/output/pk_concentration_time.png"],
+    ["Trough Level Plot", "Minimum drug concentration before the next dose, over cycles.", "clinical_trials/Oncology/PK_PD/Trough_Level_plot/output/trough_level.png"],
+    ["PD Biomarker Plot", "Pharmacodynamic biomarker response over time.", "clinical_trials/Oncology/PK_PD/PD_Biomarker_plot/output/pd_biomarker.png"],
+    ["Exposure-Efficacy", "Relationship between drug exposure and clinical efficacy.", "clinical_trials/Oncology/PK_PD/Exposure_Efficacy_plot/output/exposure_efficacy.png"],
+    ["Waterfall + PK Overlay", "Tumor response waterfall overlaid with drug exposure.", "clinical_trials/Oncology/PK_PD/Waterfall_PK_Overlay_plot/output/waterfall_pk_overlay.png"]
+  ]],
+  ["Imaging & Tumor Measurement", "Radiologic lesion measurements tracked across scans.", [
+    ["SLD Over Time", "Sum of longest diameters of target lesions over time.", "clinical_trials/Oncology/Imaging_Tumor_Measurement/SLD_Over_Time_plot/output/sld_over_time.png"],
+    ["Target Lesion Change", "Percent change in target lesion size per patient.", "clinical_trials/Oncology/Imaging_Tumor_Measurement/Target_Lesion_Change_plot/output/09_Target_Lesion_Waterfall.png"]
+  ]],
+  ["Meta-Analysis & Comparison", "Pooled effect sizes and risk-benefit tradeoffs across studies.", [
+    ["Forest Plot", "Effect estimates and confidence intervals across trials or subgroups.", "clinical_trials/Oncology/Meta_Analysis/forest_plot/output/03_Forest_Plot.png"],
+    ["Benefit-Risk Plot", "Efficacy benefit weighed against safety risk side by side.", "clinical_trials/Oncology/Meta_Analysis/Benefit_Risk_plot/output/10_Benefit_Risk_Plot.png"]
+  ]],
+  ["Trial Design & Patient Flow", "Study structure, enrollment, and patient disposition over the trial.", [
+    ["CONSORT Diagram", "Patient flow from screening through randomization and completion.", "clinical_trials/Oncology/Trial_Design_Patient_Flow/CONSORT_Diagram_plot/output/02_CONSORT_Diagram.png"],
+    ["Enrollment Over Time", "Cumulative patient enrollment across the recruitment period.", "clinical_trials/Oncology/Trial_Design_Patient_Flow/Enrollment_Over_Time_plot/output/07_Enrollment_Over_Time.png"],
+    ["Treatment Exposure", "Duration of treatment exposure per patient.", "clinical_trials/Oncology/Trial_Design_Patient_Flow/Treatment_Exposure_plot/output/treatment_exposure_plot.png"],
+    ["Dose Intensity", "Relative dose intensity received versus planned.", "clinical_trials/Oncology/Trial_Design_Patient_Flow/Dose_Intensity_plot/output/05_Dose_Intensity_Plot.png"]
+  ]]
+];
+
+class Component extends DCLogic {
+  state = { selected: null };
+  imgRef = React.createRef();
+
+  componentDidUpdate() {
+    if (this.state.selected && this.imgRef.current) {
+      this.imgRef.current.src = this.state.selected.path;
+    }
+  }
+
+  renderVals() {
+    let total = 0;
+    const domains = RAW.map(([name, groupDesc, items]) => {
+      total += items.length;
+      return {
+        name,
+        groupDesc,
+        count: items.length,
+        items: items.map(([title, desc, path]) => ({
+          title, desc, path,
+          open: () => this.setState({ selected: { title, desc, path } })
+        }))
+      };
+    });
+    return {
+      domains,
+      plotCount: total,
+      domainCount: RAW.length,
+      selected: this.state.selected,
+      imgRef: this.imgRef,
+      closeModal: () => this.setState({ selected: null }),
+      stop: (e) => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>
