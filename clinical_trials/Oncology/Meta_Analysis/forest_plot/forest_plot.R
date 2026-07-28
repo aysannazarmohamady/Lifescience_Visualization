@@ -54,7 +54,7 @@ fdf <- fdf %>%
 
 fdf$label <- factor(paste0(fdf$label, " (n=", fdf$n, ")"), levels = rev(paste0(fdf$label, " (n=", fdf$n, ")")))
 fdf <- fdf %>% mutate(sig = !overall & !is.na(hi) & hi < 1,
-                       lo_c = pmax(lo, 0.05), hi_c = pmin(hi, 10))
+                       lo_c = pmax(lo, 0.08), hi_c = pmin(hi, 6))
 
 p <- ggplot(fdf, aes(y = label)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "#888888") +
