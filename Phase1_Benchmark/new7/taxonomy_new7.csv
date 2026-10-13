@@ -1,0 +1,29 @@
+plot_type,error_id,description,injected_by,checked_by
+Enrollment over time,EN01,Cumulative curve decreases (not monotone),render argument monotone=FALSE,verify_enrollment_bench.py
+Enrollment over time,EN02,Arm label counts do not add up to overall n,render argument arm_label_shift,verify_enrollment_bench.py
+Enrollment over time,EN03,Enrolment dates after data closure,data injector en03_shift_after_closure,verify_enrollment_bench.py
+Enrollment over time,EN04,Planned-target reference line missing,render argument target_line=FALSE,verify_enrollment_bench.py
+Spider plot,SP01,-30%/+20% response reference lines missing,render argument ref_lines=FALSE,verify_spider_bench.py
+Spider plot,SP02,Trajectories do not start at 0% baseline,data injector sp02_shift_baseline,verify_spider_bench.py
+Spider plot,SP03,Lines continue after progression or death,render argument truncate=FALSE,verify_spider_bench.py
+Spider plot,SP04,Mixed time units on x axis,render argument mixed_units=TRUE,verify_spider_bench.py
+Volcano,VP01,Threshold line not at stated alpha,render argument thr_alpha,verify_volcano_bench.py
+Volcano,VP02,y axis shows -ln(p) but is labelled -log10(p),render argument ln_p=TRUE,verify_volcano_bench.py
+Volcano,VP03,x axis is raw ratio but is labelled log2 fold change,render argument fc_raw=TRUE,verify_volcano_bench.py
+Volcano,VP04,Non-significant points highlighted as significant,render argument wrong_highlight,verify_volcano_bench.py
+AE bar chart,TX01,CTCAE grade colours not ordered by severity,render argument bad_colours=TRUE,verify_ae_bench.py
+AE bar chart,TX02,Grade 4-5 events omitted,render argument drop_g45=TRUE,verify_ae_bench.py
+AE bar chart,TX03,Percentages use wrong denominator (N=80 not arm N),render argument denom,verify_ae_bench.py
+AE bar chart,TX04,Terms not ordered by frequency,render argument shuffle=TRUE,verify_ae_bench.py
+OncoPrint,OP01,Gene frequency uses mutated patients as denominator,render argument freq_denom,verify_onco_bench.py
+OncoPrint,OP02,Legend colours do not match cell colours,render argument legend_swap=TRUE,verify_onco_bench.py
+OncoPrint,OP03,Samples not sorted by alteration pattern,render argument shuffle=TRUE,verify_onco_bench.py
+OncoPrint,OP04,Top-bar alteration counts wrong,render argument topbar_off=TRUE,verify_onco_bench.py
+PK concentration-time,PK01,Linear y axis for concentration decay,render argument linear_y=TRUE,verify_pk_bench.py
+PK concentration-time,PK02,Arithmetic mean (with zeros) plotted as geometric mean,render argument arith=TRUE,verify_pk_bench.py
+PK concentration-time,PK03,Time axis is sampling index not hours,render argument index_x=TRUE,verify_pk_bench.py
+PK concentration-time,PK04,Cycle labels swapped,render argument swap_labels=TRUE,verify_pk_bench.py
+Cumulative incidence,CI01,1-KM plotted instead of cumulative incidence,render argument one_minus_km=TRUE,verify_cif_bench.py
+Cumulative incidence,CI02,Competing-event curve labelled as progression,render argument wrong_event=TRUE,verify_cif_bench.py
+Cumulative incidence,CI03,x axis in days but labelled months,render argument days_axis=TRUE,verify_cif_bench.py
+Cumulative incidence,CI04,Number-at-risk table missing,render argument no_risk=TRUE,verify_cif_bench.py
