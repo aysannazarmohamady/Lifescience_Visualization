@@ -10,6 +10,7 @@ prepare_pk_bench <- function(adpk) {
   g <- split(d, list(d$cycle, d$NOMTPT), drop = TRUE)
   do.call(rbind, lapply(g, function(x) {
     pos <- x$AVAL[x$AVAL > 0]
+    if (length(pos) / nrow(x) < 0.5) return(NULL)   # mostly below quantification: not summarised
     data.frame(cycle = x$cycle[1], time = x$NOMTPT[1], gmean = exp(mean(log(pos))),
                amean = mean(x$AVAL), n_pos = length(pos), n = nrow(x))
   }))
@@ -28,7 +29,7 @@ render_pk_bench <- function(s, out_png, linear_y = FALSE, arith = FALSE,
     scale_colour_manual(values = c(`Cycle 1` = "#1F77B4", `Cycle 3` = "#D62728"), name = NULL) +
     labs(x = "Nominal time after dose (h)", y = "Geometric mean concentration (ng/mL)",
          title = "Vizatinib plasma concentration-time profile (n = 62)",
-         subtitle = "Zero (below-quantification) values excluded from geometric means") +
+         subtitle = "Zeros (below quantification) excluded; time points with <50% quantifiable not shown") +
     theme_bw(base_size = 12) + theme(legend.position = "bottom")
   if (!linear_y) p <- p + scale_y_log10()
   ggsave(out_png, p, width = 7.5, height = 5.2, dpi = 150)
