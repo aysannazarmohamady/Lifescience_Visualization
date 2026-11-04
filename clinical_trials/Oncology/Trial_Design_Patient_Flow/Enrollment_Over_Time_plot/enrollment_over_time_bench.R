@@ -38,8 +38,11 @@ render_enrollment_bench <- function(prep, out_png, monotone = TRUE, arm_label_sh
   title <- sprintf("Cumulative enrollment: overall n=%d (Treatment %d + Control %d)",
                    prep$n, n_shown["TREATMENT"], n_shown["CONTROL"])
 
+  overall$lab <- sprintf("Overall (n=%d)", prep$n)
+  cols <- setNames(c("#08306B", "#D95F02", "#2166AC"),
+                   c(overall$lab[1], lab["TREATMENT"], lab["CONTROL"]))
   p <- ggplot() +
-    geom_step(data = overall, aes(date, cum), linewidth = 1.1, colour = "#08306B") +
+    geom_step(data = overall, aes(date, cum, colour = lab), linewidth = 1.1) +
     geom_step(data = arms, aes(date, cum_arm, colour = arm_lab), linewidth = 0.7) +
     geom_vline(xintercept = prep$closure, linetype = "dashed", colour = "#B2182B") +
     annotate("text", x = prep$closure, y = 5, label = "Study closure (data cut-off)",
@@ -47,7 +50,7 @@ render_enrollment_bench <- function(prep, out_png, monotone = TRUE, arm_label_sh
     (if (target_line) geom_hline(yintercept = prep$n, linetype = "dotted", colour = "#444444")) +
     (if (target_line) annotate("text", x = min(r$date), y = prep$n, vjust = -0.5, hjust = 0,
                                label = sprintf("Target enrollment (planned N = %d)", prep$n), size = 3)) +
-    scale_colour_manual(values = c("#2166AC", "#B2182B"), name = NULL) +
+    scale_colour_manual(values = cols, breaks = names(cols), name = NULL) +
     labs(x = "Randomization date (first-dose date proxy)", y = "Cumulative patients randomized",
          title = title) +
     theme_classic(base_size = 11) + theme(legend.position = "top")
