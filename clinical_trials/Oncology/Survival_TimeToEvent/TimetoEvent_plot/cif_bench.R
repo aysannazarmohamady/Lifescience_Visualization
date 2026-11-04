@@ -1,13 +1,17 @@
 # Benchmark cumulative incidence plot (ADTTE PFS rows): cumulative incidence of
-# progression with death-without-progression as competing event, by arm (cmprsk).
+# response, with progression/death before response as competing event, by arm (cmprsk).
 # Error switches are arguments of render_cif_bench().
 # DRAFT NOTE: drafted with LLM assistance.
 suppressPackageStartupMessages({library(ggplot2); library(cmprsk)})
 
 prepare_cif_bench <- function(adtte) {
-  d <- adtte[adtte$PARAMCD == "PFS", ]
-  d$status <- ifelse(d$COMPTYPE == "PROGRESSION", 1L, ifelse(d$COMPTYPE == "DEATH_WITHOUT_PROGRESSION", 2L, 0L))
-  d$t <- d$AVALM
+  # Event 1 = objective response (ADTTE TTR). Patients without response: competing event 2 =
+  # progression/death (PFS event) at the PFS time, or censored (0) at the PFS censoring time.
+  pfs <- adtte[adtte$PARAMCD == "PFS", c("USUBJID", "ARM", "AVALM", "CNSR")]
+  ttr <- adtte[adtte$PARAMCD == "TTR", c("USUBJID", "AVALM")]; names(ttr)[2] <- "tr"
+  d <- merge(pfs, ttr, by = "USUBJID", all.x = TRUE)
+  d$status <- ifelse(!is.na(d$tr), 1L, ifelse(d$CNSR == 0, 2L, 0L))
+  d$t <- ifelse(!is.na(d$tr), d$tr, d$AVALM)
   d
 }
 
@@ -43,7 +47,7 @@ survfit_km <- function(t, ev) {
   list(time = u, surv = surv)
 }
 
-# one_minus_km: 1-KM instead of CIF; wrong_event: death CIF labelled as progression;
+# one_minus_km: 1-KM instead of CIF; wrong_event: competing-event CIF labelled as response;
 # days_axis: x in days but axis says months; no_risk: omit number-at-risk table
 render_cif_bench <- function(d, out_png, one_minus_km = FALSE, wrong_event = FALSE,
                              days_axis = FALSE, no_risk = FALSE) {
@@ -60,8 +64,8 @@ render_cif_bench <- function(d, out_png, one_minus_km = FALSE, wrong_event = FAL
     scale_x_continuous(breaks = brk, labels = brk, limits = c(0, xmax)) +
     scale_y_continuous(breaks = seq(0, 1, 0.25)) + coord_cartesian(ylim = c(0, 1), clip = "off") +
     labs(x = "Time since randomisation (months)",
-         y = "Cumulative incidence of progression",
-         title = "Cumulative incidence of progression (competing risk: death without progression)") +
+         y = "Cumulative incidence of response",
+         title = "Cumulative incidence of objective response (competing risk: progression or death)") +
     theme_bw(base_size = 11) + theme(legend.position = "top", plot.title = element_text(size = 10))
   if (!no_risk) {
     rr <- risk; rr$x <- rr$t * (if (days_axis) 30.4375 else 1); rr$y <- ifelse(rr$arm == "TREATMENT", -0.27, -0.34)
@@ -74,5 +78,5 @@ render_cif_bench <- function(d, out_png, one_minus_km = FALSE, wrong_event = FAL
   write.csv(cv, paste0(base, "_curves.csv"), row.names = FALSE)
   write.csv(if (no_risk) risk[0, ] else risk, paste0(base, "_risk.csv"), row.names = FALSE)
   writeLines(c(paste("x_unit", if (days_axis) "days" else "months"), paste("x_label", "months"),
-               paste("event_label", "progression")), paste0(base, "_meta.txt"))
+               paste("event_label", "response")), paste0(base, "_meta.txt"))
 }
