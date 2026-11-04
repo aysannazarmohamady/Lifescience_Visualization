@@ -50,7 +50,8 @@ prepare_forest_v2 <- function(adtte) {
     data.frame(label = lab, hr = r[1], lo = r[2], hi = r[3],
                n = length(unique(x$USUBJID)), overall = lab == "All patients")
   })) |> filter(!is.na(hr)) |>
-    mutate(lo_c = pmax(lo, FP_LIM[1]), hi_c = pmin(hi, FP_LIM[2]))
+    mutate(lo_c = pmax(lo, FP_LIM[1]), hi_c = pmin(hi, FP_LIM[2]),
+           trunc_lo = lo < FP_LIM[1], trunc_hi = hi > FP_LIM[2])
 }
 
 # Switches: ci_ok = FALSE moves the first subgroup point outside its CI (FP01);
@@ -71,6 +72,8 @@ render_forest_v2 <- function(fdf, out_png, ci_ok = TRUE, null_x = 1,
   p <- ggplot(fdf, aes(y = y)) +
     geom_vline(xintercept = null_x, linetype = "dotted", colour = "#666666") +
     geom_segment(aes(x = lo_c, xend = hi_c, yend = y), linewidth = 0.7, colour = "#444444") +
+    geom_point(data = filter(fdf, trunc_lo), aes(x = lo_c, y = y), shape = "<", size = 4, colour = "#444444") +
+    geom_point(data = filter(fdf, trunc_hi), aes(x = hi_c, y = y), shape = ">", size = 4, colour = "#444444") +
     geom_point(aes(x = hr, shape = overall, fill = overall), size = 3, colour = "#222222") +
     scale_shape_manual(values = c(`FALSE` = 21, `TRUE` = 23), guide = "none") +
     scale_fill_manual(values = c(`FALSE` = "#6BAED6", `TRUE` = "#08306B"), guide = "none") +
