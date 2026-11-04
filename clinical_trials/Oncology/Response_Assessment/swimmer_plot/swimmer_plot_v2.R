@@ -74,7 +74,8 @@ render_swimmer_v2 <- function(prep, out_png, ongoing_arrow = TRUE, sorted = TRUE
                size = 2.4) +
     scale_shape_manual(values = SW_SHAPES, name = "Response") +
     scale_colour_manual(values = SW_RESP_COLORS, name = "Response") +
-    scale_x_continuous(name = "Days since treatment start", breaks = seq(0, 1500, 100)) +
+    scale_x_continuous(name = "Days since treatment start", breaks = seq(0, 1500, 100),
+                      expand = expansion(mult = c(0.01, 0.05))) +
     facet_grid(tumor ~ ., scales = "free_y", space = "free_y", switch = "y") +
     labs(title = sprintf("Swimmer plot (treatment arm, N=%d); arrow = treatment ongoing",
                          nrow(pts)),
