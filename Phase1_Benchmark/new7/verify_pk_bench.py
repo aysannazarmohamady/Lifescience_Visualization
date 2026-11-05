@@ -4,6 +4,8 @@ import hashlib, numpy as np, pandas as pd
 
 OUT = "Outputs/pk_bench/"
 d = pd.read_csv("Data/V1/ADPK.csv"); d = d[(d.PARAMCD == "CONC") & (d.NOMTPT > 0)]
+keep = d.groupby("NOMTPT").AVAL.apply(lambda x: (x > 0).mean() >= 0.5)
+d = d[d.NOMTPT.isin(keep[keep].index)]
 true = {(f"Cycle {c}", t): np.exp(np.log(g.AVAL[g.AVAL > 0]).mean())
         for (c, t), g in d.groupby(["AVISITN", "NOMTPT"])}
 
