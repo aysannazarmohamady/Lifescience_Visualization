@@ -4,8 +4,12 @@ DRAFT NOTE: drafted with LLM assistance."""
 import hashlib, numpy as np, pandas as pd
 
 OUT = "Outputs/cif_bench/"
-d = pd.read_csv("Data/V1/ADTTE.csv"); d = d[d.PARAMCD == "PFS"].copy()
-d["st"] = d.COMPTYPE.map({"PROGRESSION": 1, "DEATH_WITHOUT_PROGRESSION": 2, "CENSORED": 0})
+t = pd.read_csv("Data/V1/ADTTE.csv")
+pfs = t[t.PARAMCD == "PFS"][["USUBJID", "ARM", "AVALM", "CNSR"]]
+ttr = t[t.PARAMCD == "TTR"][["USUBJID", "AVALM"]].rename(columns={"AVALM": "tr"})
+d = pfs.merge(ttr, on="USUBJID", how="left")
+d["st"] = np.where(d.tr.notna(), 1, np.where(d.CNSR == 0, 2, 0))
+d["AVALM"] = np.where(d.tr.notna(), d.tr, d.AVALM)
 
 def aj(g, cause):
     """Cumulative incidence of `cause` (Aalen-Johansen); returns (times, est)."""
