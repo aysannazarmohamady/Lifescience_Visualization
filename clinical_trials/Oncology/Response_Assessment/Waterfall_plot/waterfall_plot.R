@@ -37,6 +37,7 @@ best_pchg <- function(uid) {
 wf <- adsl[adsl$ARM == "TREATMENT", ] |>
   rowwise() |>
   mutate(
+    tumor = TUMORTYPE,
     short = sub("^[^-]+-[^-]+-", "", USUBJID),
     resp  = best_resp(USUBJID),
     pct   = best_pchg(USUBJID),

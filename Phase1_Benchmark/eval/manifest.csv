@@ -1,0 +1,61 @@
+image,plot,truth
+images/EN_clean.png,Enrollment over time,NONE
+images/EN_EN01.png,Enrollment over time,EN01
+images/EN_EN02.png,Enrollment over time,EN02
+images/EN_EN03.png,Enrollment over time,EN03
+images/EN_EN04.png,Enrollment over time,EN04
+images/SP_clean.png,Spider plot,NONE
+images/SP_SP01.png,Spider plot,SP01
+images/SP_SP02.png,Spider plot,SP02
+images/SP_SP03.png,Spider plot,SP03
+images/SP_SP04.png,Spider plot,SP04
+images/VP_clean.png,Volcano,NONE
+images/VP_VP01.png,Volcano,VP01
+images/VP_VP02.png,Volcano,VP02
+images/VP_VP03.png,Volcano,VP03
+images/VP_VP04.png,Volcano,VP04
+images/TX_clean.png,AE bar chart,NONE
+images/TX_TX01.png,AE bar chart,TX01
+images/TX_TX02.png,AE bar chart,TX02
+images/TX_TX03.png,AE bar chart,TX03
+images/TX_TX04.png,AE bar chart,TX04
+images/OP_clean.png,OncoPrint,NONE
+images/OP_OP01.png,OncoPrint,OP01
+images/OP_OP02.png,OncoPrint,OP02
+images/OP_OP03.png,OncoPrint,OP03
+images/OP_OP04.png,OncoPrint,OP04
+images/PK_clean.png,PK concentration-time,NONE
+images/PK_PK01.png,PK concentration-time,PK01
+images/PK_PK02.png,PK concentration-time,PK02
+images/PK_PK03.png,PK concentration-time,PK03
+images/PK_PK04.png,PK concentration-time,PK04
+images/CI_clean.png,Cumulative incidence,NONE
+images/CI_CI01.png,Cumulative incidence,CI01
+images/CI_CI02.png,Cumulative incidence,CI02
+images/CI_CI03.png,Cumulative incidence,CI03
+images/CI_CI04.png,Cumulative incidence,CI04
+images/KM_v2_clean.png,Kaplan-Meier curve,NONE
+images/KM_v2_KM01.png,Kaplan-Meier curve,KM01
+images/KM_v2_KM02.png,Kaplan-Meier curve,KM02
+images/KM_v2_KM03.png,Kaplan-Meier curve,KM03
+images/KM_v2_KM04.png,Kaplan-Meier curve,KM04
+images/FP_v2_clean.png,Forest plot,NONE
+images/FP_v2_FP01.png,Forest plot,FP01
+images/FP_v2_FP02.png,Forest plot,FP02
+images/FP_v2_FP03.png,Forest plot,FP03
+images/FP_v2_FP04.png,Forest plot,FP04
+images/WF_v2_clean.png,Waterfall plot,NONE
+images/WF_v2_WF01.png,Waterfall plot,WF01
+images/WF_v2_WF02.png,Waterfall plot,WF02
+images/WF_v2_WF03.png,Waterfall plot,WF03
+images/WF_v2_WF04.png,Waterfall plot,WF04
+images/SW_v2_clean.png,Swimmer plot,NONE
+images/SW_v2_SW01.png,Swimmer plot,SW01
+images/SW_v2_SW02.png,Swimmer plot,SW02
+images/SW_v2_SW03.png,Swimmer plot,SW03
+images/SW_v2_SW04.png,Swimmer plot,SW04
+images/CN_v2_clean.png,CONSORT diagram,NONE
+images/CN_v2_CN01.png,CONSORT diagram,CN01
+images/CN_v2_CN02.png,CONSORT diagram,CN02
+images/CN_v2_CN03.png,CONSORT diagram,CN03
+images/CN_v2_CN04.png,CONSORT diagram,CN04

@@ -1,1 +1,3 @@
 Data/V1/*.csv
+__pycache__/
+Outputs/
