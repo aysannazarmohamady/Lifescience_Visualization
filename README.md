@@ -22,7 +22,7 @@ The goal is not a visualization gallery. It is a rigorous reference implementati
 
 ---
 
-## Visualization Catalog
+## ONCVIZ Reference Catalogue and Error-Detection Benchmark
 
 The catalog is organized into twelve analytical domains reflecting the distinct scientific questions that each class of visualization is designed to answer.
 
@@ -232,11 +232,11 @@ The following plot types are lower-frequency, modality-specific, or dependent on
 
 ---
 
-## Phase 1 Benchmark Artifacts
+## Archived: Phase1_Benchmark
 
-`Phase1_Benchmark/` contains the supporting artifacts for the calibration study "Human-Calibrated Validation of Large Language Model-Generated Oncology Clinical Trial Visualizations" (5 plot types, 20 injected errors, 228 scored responses from Claude Opus 4.8 and GPT-5.6).
+`Phase1_Benchmark/` holds the artifacts of an earlier, smaller study (5 plot types, 20 injected errors, 228 scored responses from Claude Opus 4.8 and GPT-5.6). It is kept for transparency and is superseded by the ONCVIZ catalogue above and by [`final_eval/`](final_eval/).
 
-> **Provenance notice:** `Phase1_Benchmark/raw_outputs/combined_final_strict_prompt.csv` (the 228 raw model responses) is the exact, byte-identical data underlying every reported metric. The injector, checker, and response-parsing scripts in that folder are **faithful reconstructions of the original implementation's documented specification, not the byte-identical original files**, which are no longer available; three checker functions are verbatim from the original session and are marked as such in the code. See [`Phase1_Benchmark/README.md`](Phase1_Benchmark/README.md) for the full breakdown of what is exact versus reconstructed.
+> **Provenance notice:** `Phase1_Benchmark/raw_outputs/combined_final_strict_prompt.csv` (the 228 raw model responses) is the exact, byte-identical data underlying every metric reported for that earlier study. The injector, checker, and response-parsing scripts in that folder are **faithful reconstructions of the original implementation's documented specification, not the byte-identical original files**, which are no longer available; three checker functions are verbatim from the original session and are marked as such in the code. See [`Phase1_Benchmark/README.md`](Phase1_Benchmark/README.md) for the full breakdown of what is exact versus reconstructed.
 
 ---
 
