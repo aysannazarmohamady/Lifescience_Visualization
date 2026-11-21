@@ -17,4 +17,6 @@ Files
 - `open_judgement.csv`: manual judgment of each open-ended response against the taxonomy definition (`correct` = 1/0, with a note).
 - `run_eval.py`: the script that produced the responses (reads keys from the environment).
 
+Image paths: the `image` column of `manifest.csv` (and the `image` field in the result files) uses the form `images/<name>.png`. The 60 PNG files are in [`../catalogue/images/`](../catalogue/images/). To rerun `run_eval.py`, copy that folder to `final_eval/images/` so the paths resolve unchanged.
+
 Metrics reported in the paper are recomputed directly from these files.
