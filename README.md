@@ -2,6 +2,8 @@
 
 **A systematic, production-ready catalog of clinical trial visualizations for oncology research, grounded in calibrated synthetic ADaM data, implemented in R, and structured for direct deployment in regulatory and scientific contexts.**
 
+[Browse the catalogue online](https://aysannazarmohamady.github.io/Lifescience_Visualization/)
+
 ---
 
 ## Overview
@@ -29,6 +31,8 @@ This repository is the open reference catalogue behind the manuscript *"ONCVIZ: 
 For each plot type the catalogue supplies one clean reference image and four flawed images (12 x 5 = 60 images, 48 injected errors). Every error is tied to a named standard (RECIST 1.1, ICH E9(R1), CTCAE v5.0, CONSORT 2010) or to a basic consistency rule, and a Python verifier recomputes the plotted quantity to confirm each label. The catalogue can be used for teaching, as a checklist for manual figure review, and as the verification layer of agentic workflows in which a model proposes an error and code confirms it.
 
 The frozen evaluation of one vision-language model (Claude Opus 5.5) on the 60-image set, with the raw responses, manual judgments, taxonomy, manifest and run script, is in [`final_eval/`](final_eval/). Its README documents the model identifier, prompts and settings of the reported run. The trial-scale check of the generator, renderers and verifiers at 1,000 patients is documented in [`scaling_check/`](scaling_check/).
+
+**Browse the catalogue online:** an interactive gallery of the plots, with full-size viewing, is available at https://aysannazarmohamady.github.io/Lifescience_Visualization/.
 
 ---
 
@@ -289,6 +293,8 @@ Lifescience_Visualization/
 │       │                                 ADEX, ADBM, ADPR, ADMUT, ADRAND, ADSIG (.csv)
 │       └── generate_adam_synthetic.R  ← Deterministic generator (seed = 42)
 │
+├── index.html, support.js             ← Online catalogue (GitHub Pages)
+├── catalogue/images/                  ← The 60 catalogue images (12 plot types x 1 clean + 4 flawed)
 ├── final_eval/                        ← Frozen 60-image evaluation (Claude Opus 5.5): raw responses,
 │                                         judgments, taxonomy, manifest, run script
 ├── scaling_check/                     ← 1,000-patient check of generator, renderers and verifiers
