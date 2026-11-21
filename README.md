@@ -4,6 +4,8 @@
 
 [Browse the catalogue online](https://aysannazarmohamady.github.io/Lifescience_Visualization/)
 
+<img width="1600" height="860" alt="image" src="https://github.com/user-attachments/assets/249203bc-d648-4d12-aaf1-a0e381a35258" />
+
 ---
 
 ## Overview
