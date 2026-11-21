@@ -1,5 +1,7 @@
 # ONCVIZ-001 Phase 1 Benchmark -- Release Artifacts
 
+> **Archived.** This folder holds the artifacts of an earlier, smaller study. It is kept for transparency and is superseded by the ONCVIZ reference catalogue (12 plot types, 48 errors, 60 images) described in the root [`README.md`](../README.md) and by the frozen evaluation in [`final_eval/`](../final_eval/).
+
 Supporting artifacts for "Human-Calibrated Validation of LLM Oncology
 Clinical Trial Visualizations." This is the Phase 1 calibration benchmark:
 5 of 12 planned plot types (Kaplan-Meier, waterfall, forest, swimmer,

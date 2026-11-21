@@ -1,0 +1,61 @@
+model,image,truth,has_error,correct,note
+us.anthropic.claude-opus-5-5,images/EN_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/EN_EN01.png,EN01,True,1,Cumulative curve decreasing - matches EN01
+us.anthropic.claude-opus-5-5,images/EN_EN02.png,EN02,True,1,Arm counts 62+15=77 != 80 - matches EN02
+us.anthropic.claude-opus-5-5,images/EN_EN03.png,EN03,True,1,Patients randomized after data cut-off - matches EN03
+us.anthropic.claude-opus-5-5,images/EN_EN04.png,EN04,False,0,Missed: no error reported (target line missing not noticed)
+us.anthropic.claude-opus-5-5,images/SP_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/SP_SP01.png,SP01,True,1,Missing +20%/-30% reference lines - matches SP01
+us.anthropic.claude-opus-5-5,images/SP_SP02.png,SP02,True,1,Lines start at ~+12% not 0% - matches SP02
+us.anthropic.claude-opus-5-5,images/SP_SP03.png,SP03,True,1,Trajectories not truncated at progression - matches SP03
+us.anthropic.claude-opus-5-5,images/SP_SP04.png,SP04,False,0,Missed: no error reported (mixed time units not noticed)
+us.anthropic.claude-opus-5-5,images/VP_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/VP_VP01.png,VP01,True,1,Threshold line at ~0.6 not 1.30 - matches VP01
+us.anthropic.claude-opus-5-5,images/VP_VP02.png,VP02,True,0,"Wrong mechanism: point colouring vs threshold, not -ln(p) labelled as -log10(p)"
+us.anthropic.claude-opus-5-5,images/VP_VP03.png,VP03,True,1,Raw ratios plotted under log2 FC label - matches VP03
+us.anthropic.claude-opus-5-5,images/VP_VP04.png,VP04,True,1,Non-significant points coloured significant - matches VP04
+us.anthropic.claude-opus-5-5,images/TX_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/TX_TX01.png,TX01,True,1,Grade colour scale inverted vs severity - matches TX01
+us.anthropic.claude-opus-5-5,images/TX_TX02.png,TX02,False,0,Missed: no error reported (grade 4-5 omission not noticed)
+us.anthropic.claude-opus-5-5,images/TX_TX03.png,TX03,True,1,Percentages multiples of 1/80 not 1/62 - matches TX03
+us.anthropic.claude-opus-5-5,images/TX_TX04.png,TX04,False,0,Missed: has_error false; unsorted order noted but dismissed as layout choice
+us.anthropic.claude-opus-5-5,images/OP_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/OP_OP01.png,OP01,True,1,Gene % uses ~72 altered patients as denominator - matches OP01
+us.anthropic.claude-opus-5-5,images/OP_OP02.png,OP02,True,1,Legend colours swapped vs cells - matches OP02
+us.anthropic.claude-opus-5-5,images/OP_OP03.png,OP03,False,0,Missed: no error reported (unsorted samples not noticed)
+us.anthropic.claude-opus-5-5,images/OP_OP04.png,OP04,,0,PARSE_FAIL: truncated response (partial text says no error)
+us.anthropic.claude-opus-5-5,images/PK_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/PK_PK01.png,PK01,False,0,Missed: no error reported (linear y axis not noticed)
+us.anthropic.claude-opus-5-5,images/PK_PK02.png,PK02,False,0,Missed: no error reported (arithmetic mean with zeros not noticed)
+us.anthropic.claude-opus-5-5,images/PK_PK03.png,PK03,False,0,Missed: no error reported (sampling-index time axis not noticed)
+us.anthropic.claude-opus-5-5,images/PK_PK04.png,PK04,False,0,Missed: no error reported (swapped cycle labels not noticed)
+us.anthropic.claude-opus-5-5,images/CI_clean.png,NONE,True,0,False alarm: claims risk table inconsistent with curve follow-up
+us.anthropic.claude-opus-5-5,images/CI_CI01.png,CI01,True,0,"Wrong mechanism: curves end early vs risk table, not 1-KM vs cumulative incidence"
+us.anthropic.claude-opus-5-5,images/CI_CI02.png,CI02,False,0,Missed: no error reported (competing-event curve mislabelled not noticed)
+us.anthropic.claude-opus-5-5,images/CI_CI03.png,CI03,True,1,x axis values are days but labelled months - matches CI03
+us.anthropic.claude-opus-5-5,images/CI_CI04.png,CI04,False,0,Missed: no error reported (missing number-at-risk table not noticed)
+us.anthropic.claude-opus-5-5,images/KM_v2_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/KM_v2_KM01.png,KM01,True,1,Curve steps upward - matches KM01
+us.anthropic.claude-opus-5-5,images/KM_v2_KM02.png,KM02,True,1,Promised censor marks absent - matches KM02
+us.anthropic.claude-opus-5-5,images/KM_v2_KM03.png,KM03,True,1,Curves start at ~0.92 not 1.0 - matches KM03
+us.anthropic.claude-opus-5-5,images/KM_v2_KM04.png,KM04,True,1,At-risk table contradicts curve events/censoring - matches KM04
+us.anthropic.claude-opus-5-5,images/FP_v2_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/FP_v2_FP01.png,FP01,True,1,Point estimate outside its CI - matches FP01
+us.anthropic.claude-opus-5-5,images/FP_v2_FP02.png,FP02,True,1,Null line at HR=2 not 1 - matches FP02
+us.anthropic.claude-opus-5-5,images/FP_v2_FP03.png,FP03,True,1,HR axis linear instead of log - matches FP03
+us.anthropic.claude-opus-5-5,images/FP_v2_FP04.png,FP04,True,1,Subgroup Ns sum to 105 not 80 - matches FP04
+us.anthropic.claude-opus-5-5,images/WF_v2_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/WF_v2_WF01.png,WF01,True,1,Bar colour (SD) inconsistent with -51% change - matches WF01
+us.anthropic.claude-opus-5-5,images/WF_v2_WF02.png,WF02,False,0,Missed: no error reported (missing +20% PD line not noticed)
+us.anthropic.claude-opus-5-5,images/WF_v2_WF03.png,WF03,True,1,Bars in patient-ID order not sorted - matches WF03
+us.anthropic.claude-opus-5-5,images/WF_v2_WF04.png,WF04,True,1,Response category CR inconsistent with -41% change - matches WF04
+us.anthropic.claude-opus-5-5,images/SW_v2_clean.png,NONE,True,0,False alarm: markers after end of short bars
+us.anthropic.claude-opus-5-5,images/SW_v2_SW01.png,SW01,True,1,"Response marker at day -160, misaligned - matches SW01"
+us.anthropic.claude-opus-5-5,images/SW_v2_SW02.png,SW02,True,0,"Wrong mechanism: same markers-after-short-bar complaint as on the clean image, not the injected bar-length defect"
+us.anthropic.claude-opus-5-5,images/SW_v2_SW03.png,SW03,True,0,"Wrong mechanism: markers after bar end, not missing ongoing-treatment arrows"
+us.anthropic.claude-opus-5-5,images/SW_v2_SW04.png,SW04,False,0,Missed: has_error false (row sorting not noticed)
+us.anthropic.claude-opus-5-5,images/CN_v2_clean.png,NONE,False,1,Clean; no error reported
+us.anthropic.claude-opus-5-5,images/CN_v2_CN01.png,CN01,True,1,93-12=81 != 80 randomized - matches CN01
+us.anthropic.claude-opus-5-5,images/CN_v2_CN02.png,CN02,True,1,Exclusion reasons missing - matches CN02
+us.anthropic.claude-opus-5-5,images/CN_v2_CN03.png,CN03,False,0,Missed: no error reported (63+17 accepted)
+us.anthropic.claude-opus-5-5,images/CN_v2_CN04.png,CN04,True,1,Discontinuation/loss counts missing per arm - matches CN04

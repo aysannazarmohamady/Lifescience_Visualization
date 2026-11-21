@@ -2,6 +2,10 @@
 
 **A systematic, production-ready catalog of clinical trial visualizations for oncology research, grounded in calibrated synthetic ADaM data, implemented in R, and structured for direct deployment in regulatory and scientific contexts.**
 
+[Browse the catalogue online](https://aysannazarmohamady.github.io/Lifescience_Visualization/)
+
+<img width="1600" height="860" alt="image" src="https://github.com/user-attachments/assets/249203bc-d648-4d12-aaf1-a0e381a35258" />
+
 ---
 
 ## Overview
@@ -19,6 +23,18 @@ The goal is not a visualization gallery. It is a rigorous reference implementati
 > **Current version:** Active development, approaching v1.0 (Oncology)
 >
 > The shared ADaM synthetic dataset (`Data/V1/`) is complete and fully validated across 13 domains and 26,723 records. **Version 1 scope has been narrowed to the most commonly used visualizations** across domains 01–09, so v1 can ship as a tight, high-value reference implementation rather than an exhaustive gallery. Niche, low-frequency, or highly specialized plot types (including the entirety of domains 10–12) have been moved to the [Deferred to Future Versions](#deferred-to-future-versions) list below and are out of scope for v1. See the table below for current implementation status.
+
+---
+
+## ONCVIZ Reference Catalogue and Error-Detection Benchmark
+
+This repository is the open reference catalogue behind the manuscript *"ONCVIZ: An Open Reference Catalogue for Standardized Oncology Trial Visualizations and AI-based Error-Detection"*. The catalogue provides standardized, version-controlled R code for 12 oncology plot types that appear routinely in trial reports: Kaplan-Meier, cumulative incidence, waterfall, spider, swimmer, forest, CONSORT, adverse-event bar chart, pharmacokinetic concentration-time, OncoPrint, volcano and enrollment-over-time plots.
+
+For each plot type the catalogue supplies one clean reference image and four flawed images (12 x 5 = 60 images, 48 injected errors). Every error is tied to a named standard (RECIST 1.1, ICH E9(R1), CTCAE v5.0, CONSORT 2010) or to a basic consistency rule, and a Python verifier recomputes the plotted quantity to confirm each label. The catalogue can be used for teaching, as a checklist for manual figure review, and as the verification layer of agentic workflows in which a model proposes an error and code confirms it.
+
+The frozen evaluation of one vision-language model (Claude Opus 5.5) on the 60-image set, with the raw responses, manual judgments, taxonomy, manifest and run script, is in [`final_eval/`](final_eval/). Its README documents the model identifier, prompts and settings of the reported run. The trial-scale check of the generator, renderers and verifiers at 1,000 patients is documented in [`scaling_check/`](scaling_check/).
+
+**Browse the catalogue online:** an interactive gallery of the plots, with full-size viewing, is available at https://aysannazarmohamady.github.io/Lifescience_Visualization/.
 
 ---
 
@@ -232,11 +248,11 @@ The following plot types are lower-frequency, modality-specific, or dependent on
 
 ---
 
-## Phase 1 Benchmark Artifacts
+## Archived: Phase1_Benchmark
 
-`Phase1_Benchmark/` contains the supporting artifacts for the calibration study "Human-Calibrated Validation of Large Language Model-Generated Oncology Clinical Trial Visualizations" (5 plot types, 20 injected errors, 228 scored responses from Claude Opus 4.8 and GPT-5.6).
+`Phase1_Benchmark/` holds the artifacts of an earlier, smaller study (5 plot types, 20 injected errors, 228 scored responses from Claude Opus 4.8 and GPT-5.6). It is kept for transparency and is superseded by the ONCVIZ catalogue above and by [`final_eval/`](final_eval/).
 
-> **Provenance notice:** `Phase1_Benchmark/raw_outputs/combined_final_strict_prompt.csv` (the 228 raw model responses) is the exact, byte-identical data underlying every reported metric. The injector, checker, and response-parsing scripts in that folder are **faithful reconstructions of the original implementation's documented specification, not the byte-identical original files**, which are no longer available; three checker functions are verbatim from the original session and are marked as such in the code. See [`Phase1_Benchmark/README.md`](Phase1_Benchmark/README.md) for the full breakdown of what is exact versus reconstructed.
+> **Provenance notice:** `Phase1_Benchmark/raw_outputs/combined_final_strict_prompt.csv` (the 228 raw model responses) is the exact, byte-identical data underlying every metric reported for that earlier study. The injector, checker, and response-parsing scripts in that folder are **faithful reconstructions of the original implementation's documented specification, not the byte-identical original files**, which are no longer available; three checker functions are verbatim from the original session and are marked as such in the code. See [`Phase1_Benchmark/README.md`](Phase1_Benchmark/README.md) for the full breakdown of what is exact versus reconstructed.
 
 ---
 
@@ -278,6 +294,15 @@ Lifescience_Visualization/
 │       ├── oncoviz_data_v1.zip        ← ADSL, ADRS, ADTR, ADAE, ADLB, ADTTE, ADPK,
 │       │                                 ADEX, ADBM, ADPR, ADMUT, ADRAND, ADSIG (.csv)
 │       └── generate_adam_synthetic.R  ← Deterministic generator (seed = 42)
+│
+├── index.html, support.js             ← Online catalogue (GitHub Pages)
+├── catalogue/images/                  ← The 60 catalogue images (12 plot types x 1 clean + 4 flawed)
+├── final_eval/                        ← Frozen 60-image evaluation (Claude Opus 5.5): raw responses,
+│                                         judgments, taxonomy, manifest, run script
+├── scaling_check/                     ← 1,000-patient check of generator, renderers and verifiers
+├── Phase1_Benchmark/                  ← Archived earlier study; also holds the renderers and verifiers
+│                                         for 7 newer plot types (new7/) and the second
+│                                         implementations of 5 plot types (variant2/)
 │
 └── clinical_trials/
     └── Oncology/
